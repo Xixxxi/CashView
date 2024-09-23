@@ -19,12 +19,20 @@ import { useTransactionContext } from '../context/TransactionContext';
 const PASSWORD_STORAGE_KEY = '@app_password';
 
 const currencies = [
-  { symbol: '€', code: 'EUR', name: 'Euro' },
   { symbol: '$', code: 'USD', name: 'US Dollar' },
-  { symbol: '£', code: 'GBP', name: 'British Pound' },
+  { symbol: '€', code: 'EUR', name: 'Euro' },
   { symbol: '¥', code: 'JPY', name: 'Japanese Yen' },
+  { symbol: '£', code: 'GBP', name: 'British Pound Sterling' },
+  { symbol: '₽', code: 'RUB', name: 'Russian Ruble' },
+  { symbol: 'MX$', code: 'MXN', name: 'Mexican Peso' },
+  { symbol: 'CHF', code: 'CHF', name: 'Swiss Franc' },
+  { symbol: '¥', code: 'CNY', name: 'Chinese Yuan' },
+  { symbol: 'kr', code: 'SEK', name: 'Swedish Krona' },
+  { symbol: 'NZ$', code: 'NZD', name: 'New Zealand Dollar' },
+  { symbol: '₩', code: 'KRW', name: 'South Korean Won' },
   { symbol: '₹', code: 'INR', name: 'Indian Rupee' },
-  // Add more currencies as needed
+  { symbol: 'R$', code: 'BRL', name: 'Brazilian Real' },
+  { symbol: 'R', code: 'ZAR', name: 'South African Rand' },
 ];
 
 const Settings: React.FC = () => {
@@ -39,7 +47,7 @@ const Settings: React.FC = () => {
   const [isPasswordVerified, setIsPasswordVerified] = useState(false);
 
   const [currencyModalVisible, setCurrencyModalVisible] = useState(false);
-  const [selectedCurrency, setSelectedCurrency] = useState<string>('€');
+  const [selectedCurrency, setSelectedCurrency] = useState<string>('USD');
 
   useEffect(() => {
     const checkPasswordAndCurrency = async () => {
@@ -123,10 +131,10 @@ const Settings: React.FC = () => {
     setCurrencyModalVisible(true);
   };
 
-  const handleCurrencySelect = async (currencySymbol: string) => {
+  const handleCurrencySelect = async (currencyCode: string) => {
     try {
-      await AsyncStorage.setItem('@default_currency', currencySymbol);
-      setSelectedCurrency(currencySymbol);
+      await AsyncStorage.setItem('@default_currency', currencyCode);
+      setSelectedCurrency(currencyCode);
       setCurrencyModalVisible(false);
       Alert.alert('Success', 'Default currency has been updated.');
     } catch (error) {
@@ -259,7 +267,7 @@ const Settings: React.FC = () => {
               renderItem={({ item }) => (
                 <TouchableOpacity
                   style={styles.currencyOption}
-                  onPress={() => handleCurrencySelect(item.symbol)}
+                  onPress={() => handleCurrencySelect(item.code)}
                 >
                   <Text style={styles.currencyOptionText}>
                     {item.symbol} - {item.name}
@@ -289,7 +297,6 @@ const Settings: React.FC = () => {
     </SafeAreaView>
   );
 };
-
 
 const styles = StyleSheet.create({
   // Container styles

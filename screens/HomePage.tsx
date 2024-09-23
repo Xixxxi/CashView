@@ -31,11 +31,20 @@ const months = [
 ];
 
 const exchangeRates: { [key: string]: number } = {
-  'USD': 1,     // US Dollar
-  'EUR': 0.85,  // Euro
-  'GBP': 0.75,  // British Pound
-  'JPY': 110,   // Japanese Yen
-  'INR': 74,    // Indian Rupee
+  'USD': 1.00,     // US Dollar
+  'EUR': 0.92,     // Euro
+  'GBP': 0.77,     // British Pound Sterling
+  'JPY': 156.93,   // Japanese Yen
+  'INR': 83.97,    // Indian Rupee
+  'RUB': 88.31,    // Russian Ruble
+  'MXN': 19.17,    // Mexican Peso
+  'CHF': 0.89,     // Swiss Franc
+  'CNY': 7.09,     // Chinese Yuan
+  'SEK': 10.18,    // Swedish Krona
+  'NZD': 1.49,     // New Zealand Dollar
+  'KRW': 1363.94,  // South Korean Won
+  'BRL': 5.04,     // Brazilian Real
+  'ZAR': 18.95,    // South African Rand
   // Add more currencies as needed
 };
 
@@ -45,6 +54,15 @@ const currencySymbols: { [key: string]: string } = {
   'GBP': '£',
   'JPY': '¥',
   'INR': '₹',
+  'RUB': '₽',
+  'MXN': 'MX$',
+  'CHF': 'CHF',
+  'CNY': '¥',
+  'SEK': 'kr',
+  'NZD': 'NZ$',
+  'KRW': '₩',
+  'BRL': 'R$',
+  'ZAR': 'R',
   // Add more currencies as needed
 };
 
