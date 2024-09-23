@@ -26,6 +26,7 @@ type TransactionContextType = {
   transactions: Transaction[];
   addTransaction: (transaction: Transaction) => void;
   removeTransaction: (id: number) => void;
+  updateTransaction: (id: number, updatedFields: Partial<Transaction>) => void; // New method
   setTransactions: React.Dispatch<React.SetStateAction<Transaction[]>>;
 };
 
@@ -89,7 +90,7 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({
         ? 1
         : transaction.repeating === 'Quarterly'
         ? 3
-        : transaction.repeating === 'Yearly'
+        : transaction.repeating === 'Annually'
         ? 12
         : 0; // No repeating
 
@@ -134,9 +135,18 @@ export const TransactionProvider: React.FC<{ children: ReactNode }> = ({
     // No need to call saveTransactions here since useEffect handles it
   };
 
+  // New method to update a transaction
+  const updateTransaction = (id: number, updatedFields: Partial<Transaction>) => {
+    setTransactions((prevTransactions) =>
+      prevTransactions.map((transaction) =>
+        transaction.id === id ? { ...transaction, ...updatedFields } : transaction
+      )
+    );
+  };
+
   return (
     <TransactionContext.Provider
-      value={{ transactions, addTransaction, removeTransaction, setTransactions }}
+      value={{ transactions, addTransaction, removeTransaction, updateTransaction, setTransactions }}
     >
       {children}
     </TransactionContext.Provider>

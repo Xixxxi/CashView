@@ -20,6 +20,7 @@ import moment from 'moment';
 import { Ionicons } from '@expo/vector-icons';
 import { ComponentProps } from 'react';
 import { Category, categories as defaultCategories } from '../context/CategoryData';
+import TransactionDetailModal from '../components/TransactionDetailModal'; // Import the new modal component
 
 type IoniconsName = ComponentProps<typeof Ionicons>['name'];
 
@@ -440,43 +441,12 @@ const HomePage: React.FC = () => {
       </Modal>
 
       {/* Transaction Details Modal */}
-      {selectedTransaction && (
-        <Modal visible={true} transparent={true} animationType="slide">
-          <View style={styles.modalContainer}>
-            <View style={styles.transactionDetailsWrapper}>
-              <Text style={styles.transactionDetailTitle}>
-                Transaction Details
-              </Text>
-              <Text style={styles.transactionDetailText}>
-                Category: {selectedTransaction.category}
-              </Text>
-              <Text style={styles.transactionDetailText}>
-                Amount: {selectedTransaction.amount}{' '}
-                {selectedTransaction.currency ||
-                  getCurrencySymbol(defaultCurrencyCode)}
-              </Text>
-              <Text style={styles.transactionDetailText}>
-                Date: {selectedTransaction.date}
-              </Text>
-              <Text style={styles.transactionDetailText}>
-                Account: {selectedTransaction.account}
-              </Text>
-              <Text style={styles.transactionDetailText}>
-                Repeating: {selectedTransaction.repeating}
-              </Text>
-              <Text style={styles.transactionDetailText}>
-                Notes: {selectedTransaction.notes}
-              </Text>
-              <TouchableOpacity
-                style={styles.closeButton}
-                onPress={closeTransactionDetails}
-              >
-                <Ionicons name="close" size={24} color="black" />
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
-      )}
+      <TransactionDetailModal
+        visible={selectedTransaction !== null}
+        transaction={selectedTransaction}
+        getCurrencySymbol={getCurrencySymbol}
+        onClose={closeTransactionDetails}
+      />
 
       {/* Dropdown Menu Modal */}
       <Modal visible={isMenuVisible} transparent={true} animationType="fade">
@@ -648,21 +618,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     marginBottom: 8,
   },
-  transactionDetailsWrapper: {
-    backgroundColor: '#FFF',
-    padding: 20,
-    margin: 20,
-    borderRadius: 8,
-  },
-  transactionDetailTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    marginBottom: 16,
-  },
-  transactionDetailText: {
-    fontSize: 16,
-    marginBottom: 8,
-  },
+  // Styles related to the Transaction Detail Modal have been moved to the new component
   menuOverlay: {
     flex: 1,
     justifyContent: 'center',
