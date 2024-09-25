@@ -10,6 +10,7 @@ import {
   Modal,
   FlatList,
   Alert,
+  ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -28,16 +29,12 @@ const getCurrentDate = (): string => {
 };
 
 const AddTransactionPage: React.FC = () => {
-  const [transactionType, setTransactionType] = useState<'expense' | 'income'>(
-    'expense'
-  );
+  const [transactionType, setTransactionType] = useState<'expense' | 'income'>('expense');
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('Gehälter');
   const [date, setDate] = useState(getCurrentDate());
   const [account, setAccount] = useState('Savings');
-  const [repeating, setRepeating] = useState<
-    'No' | 'Monthly' | 'Quarterly' | 'Annually'
-  >('No');
+  const [repeating, setRepeating] = useState<'No' | 'Monthly' | 'Quarterly' | 'Annually'>('No');
   const [notes, setNotes] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
   const [repeatingModalVisible, setRepeatingModalVisible] = useState(false);
@@ -63,33 +60,39 @@ const AddTransactionPage: React.FC = () => {
   }, []);
 
   const handleSave = () => {
-    if (amount) {
-      const newTransaction = {
-        id: Date.now(),
-        type: transactionType,
-        amount,
-        category,
-        date,
-        account,
-        repeating,
-        notes,
-        currency: defaultCurrency,
-      };
-
-      addTransaction(newTransaction);
-      navigation.goBack();
-    } else {
-      console.log('Please enter an amount.');
+    if (amount.trim() === '') {
+      Alert.alert('Validation Error', 'Please enter an amount.');
+      return;
     }
+
+    const parsedAmount = parseFloat(amount);
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      Alert.alert('Validation Error', 'Please enter a valid amount greater than zero.');
+      return;
+    }
+
+    const newTransaction = {
+      id: Date.now(),
+      type: transactionType,
+      amount,
+      category,
+      date,
+      account,
+      repeating,
+      notes,
+      currency: defaultCurrency,
+    };
+
+    addTransaction(newTransaction);
+    Alert.alert('Success', 'Transaction added successfully.');
+    navigation.goBack();
   };
 
   const handleCancel = () => {
     navigation.goBack();
   };
 
-  const handleRepeatingSelect = (
-    repeatingOption: 'No' | 'Monthly' | 'Quarterly' | 'Annually'
-  ) => {
+  const handleRepeatingSelect = (repeatingOption: 'No' | 'Monthly' | 'Quarterly' | 'Annually') => {
     setRepeating(repeatingOption);
     setRepeatingModalVisible(false);
   };
@@ -110,121 +113,151 @@ const AddTransactionPage: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>New Transaction</Text>
-      </View>
-
-      <View style={styles.transactionType}>
-        <TouchableOpacity
-          style={[
-            styles.typeButton,
-            transactionType === 'income' && styles.activeType,
-          ]}
-          onPress={() => setTransactionType('income')}
-        >
-          <Ionicons
-            name="cash-outline"
-            size={16}
-            color={transactionType === 'income' ? '#FFF' : '#4CAF50'}
-          />
-          <Text
-            style={
-              transactionType === 'income' ? styles.activeTypeText : styles.typeText
-            }
-          >
-            INCOME
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.typeButton,
-            transactionType === 'expense' && styles.activeType,
-          ]}
-          onPress={() => setTransactionType('expense')}
-        >
-          <Ionicons
-            name="cart-outline"
-            size={16}
-            color={transactionType === 'expense' ? '#FFF' : '#FF6347'}
-          />
-          <Text
-            style={
-              transactionType === 'expense' ? styles.activeTypeText : styles.typeText
-            }
-          >
-            EXPENSE
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Input for Amount */}
-      <View style={styles.amountInputContainer}>
-        <TextInput
-          style={styles.amountInput}
-          keyboardType="numeric"
-          placeholder={`0.00 ${defaultCurrency}`}
-          value={amount}
-          onChangeText={setAmount}
-        />
-      </View>
-
-      {/* Transaction Details */}
-      <View style={styles.transactionDetails}>
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>Category</Text>
-          <TouchableOpacity onPress={() => setModalVisible(true)}>
-            <Text style={styles.clickableCategory}>{category}</Text>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity onPress={handleCancel} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={24} color="#333" />
           </TouchableOpacity>
+          <Text style={styles.headerTitle}>New Transaction</Text>
+          <View style={{ width: 24 }} /> 
         </View>
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>Date</Text>
-          <TouchableOpacity onPress={showDatePicker}>
-            <Text style={styles.clickableCategory}>{date}</Text>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>Account</Text>
-          <Text style={styles.detailValue}>{account}</Text>
-        </View>
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>Repeating</Text>
-          <TouchableOpacity onPress={() => setRepeatingModalVisible(true)}>
+
+        {/* Transaction Type Selection */}
+        <View style={styles.transactionTypeContainer}>
+          {/* Income Button */}
+          <TouchableOpacity
+            style={[
+              styles.typeButton,
+              transactionType === 'income' && styles.activeIncomeButton,
+            ]}
+            onPress={() => setTransactionType('income')}
+          >
+            <Ionicons
+              name="cash-outline"
+              size={20}
+              color={transactionType === 'income' ? '#FFF' : '#4CAF50'}
+            />
             <Text
               style={[
-                styles.clickableCategory,
-                repeating !== 'No' && styles.activeRepeating,
+                styles.typeButtonText,
+                transactionType === 'income' && styles.activeTypeButtonText,
               ]}
             >
-              {repeating}
+              INCOME
+            </Text>
+          </TouchableOpacity>
+
+
+                    {/* Expenses Button */}
+                    <TouchableOpacity
+            style={[
+              styles.typeButton,
+              transactionType === 'expense' && styles.activeExpenseButton,
+            ]}
+            onPress={() => setTransactionType('expense')}
+          >
+            <Ionicons
+              name="cart-outline"
+              size={20}
+              color={transactionType === 'expense' ? '#FFF' : '#FF6347'}
+            />
+            <Text
+              style={[
+                styles.typeButtonText,
+                transactionType === 'expense' && styles.activeTypeButtonText,
+              ]}
+            >
+              EXPENSE
             </Text>
           </TouchableOpacity>
         </View>
-        <View style={styles.detailRow}>
-          <Text style={styles.detailLabel}>Notes</Text>
+
+        {/* Amount Input */}
+        <View style={styles.amountContainer}>
           <TextInput
-            style={styles.notesInput}
-            placeholder="Enter notes"
-            value={notes}
-            onChangeText={setNotes}
+            style={styles.amountInput}
+            keyboardType="decimal-pad"
+            placeholder={`0.00 ${defaultCurrency}`}
+            placeholderTextColor="#AAA"
+            value={amount}
+            onChangeText={setAmount}
           />
         </View>
-      </View>
 
-      {/* Save and Cancel Buttons */}
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          style={[styles.button, styles.cancelButton]}
-          onPress={handleCancel}
-        >
-          <Text style={styles.buttonText}>Cancel</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.button, styles.saveButton]}
-          onPress={handleSave}
-        >
-          <Text style={styles.buttonText}>Save</Text>
-        </TouchableOpacity>
-      </View>
+        {/* Transaction Details */}
+        <View style={styles.detailsContainer}>
+          {/* Category */}
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Category</Text>
+            <TouchableOpacity
+              style={styles.detailValueContainer}
+              onPress={() => setModalVisible(true)}
+            >
+              <Text style={styles.detailValueText}>{category}</Text>
+              <Ionicons name="chevron-forward" size={20} color="#666" />
+            </TouchableOpacity>
+          </View>
+
+          {/* Date */}
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Date</Text>
+            <TouchableOpacity style={styles.detailValueContainer} onPress={showDatePicker}>
+              <Text style={styles.detailValueText}>{date}</Text>
+              <Ionicons name="chevron-forward" size={20} color="#666" />
+            </TouchableOpacity>
+          </View>
+
+          {/* Account */}
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Account</Text>
+            <Text style={styles.detailValueText}>{account}</Text>
+          </View>
+
+          {/* Repeating */}
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Repeating</Text>
+            <TouchableOpacity
+              style={styles.detailValueContainer}
+              onPress={() => setRepeatingModalVisible(true)}
+            >
+              <Text
+                style={[
+                  styles.detailValueText,
+                  repeating !== 'No' && styles.activeRepeatingText,
+                ]}
+              >
+                {repeating}
+              </Text>
+              <Ionicons name="chevron-forward" size={20} color="#666" />
+            </TouchableOpacity>
+          </View>
+
+          {/* Notes */}
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Notes</Text>
+            <TextInput
+              style={styles.notesInput}
+              placeholder="Add notes..."
+              placeholderTextColor="#AAA"
+              value={notes}
+              onChangeText={setNotes}
+              multiline
+              numberOfLines={4}
+            />
+          </View>
+        </View>
+
+        {/* Save and Cancel Buttons */}
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
+            <Text style={styles.cancelButtonText}>Cancel</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+            <Text style={styles.saveButtonText}>Save</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
 
       {/* Category Modal */}
       <CategoryModal
@@ -233,35 +266,44 @@ const AddTransactionPage: React.FC = () => {
         onSelectCategory={(categoryLabel) => setCategory(categoryLabel)}
       />
 
-      {/* Modal for Repeating Selection */}
+      {/* Repeating Modal */}
       <Modal
         animationType="slide"
-        transparent={false}
+        transparent={true}
         visible={repeatingModalVisible}
         onRequestClose={() => setRepeatingModalVisible(false)}
       >
-        <View style={styles.modalHeader}>
-          <TouchableOpacity onPress={() => setRepeatingModalVisible(false)}>
-            <Ionicons name="close-outline" size={24} color="black" />
-          </TouchableOpacity>
-          <Text style={styles.modalTitle}>REPEATING</Text>
-        </View>
-
-        <FlatList
-          data={['No', 'Monthly', 'Quarterly', 'Annually']}
-          keyExtractor={(item) => item}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={[
-                styles.repeatingItem,
-                repeating === item && styles.selectedRepeatingItem,
-              ]}
-              onPress={() => handleRepeatingSelect(item as any)}
-            >
-              <Text style={styles.repeatingLabel}>{item}</Text>
-            </TouchableOpacity>
-          )}
-        />
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPressOut={() => setRepeatingModalVisible(false)}
+        >
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Set Repeating</Text>
+            <FlatList
+              data={['No', 'Monthly', 'Quarterly', 'Annually']}
+              keyExtractor={(item) => item}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={[
+                    styles.modalOption,
+                    repeating === item && styles.selectedModalOption,
+                  ]}
+                  onPress={() => handleRepeatingSelect(item as any)}
+                >
+                  <Text
+                    style={[
+                      styles.modalOptionText,
+                      repeating === item && styles.selectedModalOptionText,
+                    ]}
+                  >
+                    {item}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            />
+          </View>
+        </TouchableOpacity>
       </Modal>
 
       {/* Date Picker Modal */}
@@ -276,150 +318,203 @@ const AddTransactionPage: React.FC = () => {
   );
 };
 
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFF',
+    backgroundColor: '#F7F9FC',
+  },
+  scrollContainer: {
     padding: 16,
+    paddingBottom: 32,
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
+    justifyContent: 'space-between',
+    marginBottom: 24,
+  },
+  backButton: {
+    padding: 8,
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#333',
   },
-  transactionType: {
+  transactionTypeContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginVertical: 24,
+    marginBottom: 24,
   },
   typeButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
+    backgroundColor: '#FFF',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 25,
     borderWidth: 1,
-    borderColor: '#FF6347',
+    borderColor: '#DDD',
     marginHorizontal: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  activeType: {
+  activeExpenseButton: {
     backgroundColor: '#FF6347',
+    borderColor: '#FF6347',
   },
-  typeText: {
-    marginLeft: 8,
+  activeIncomeButton: {
+    backgroundColor: '#4CAF50',
+    borderColor: '#4CAF50',
+  },
+  typeButtonText: {
+    marginLeft: 12,
     fontSize: 16,
-    color: '#FF6347',
+    color: '#4CAF50',
+    fontWeight: '600',
   },
-  activeTypeText: {
+  activeTypeButtonText: {
     color: '#FFF',
   },
-  amountInputContainer: {
-    width: '100%',
+  amountContainer: {
     alignItems: 'center',
-    marginVertical: 24,
+    marginBottom: 24,
   },
   amountInput: {
-    fontSize: 36,
-    fontWeight: 'bold',
+    width: '80%',
+    backgroundColor: '#FFF',
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    fontSize: 32,
+    fontWeight: '700',
+    color: '#333',
     textAlign: 'center',
     borderWidth: 1,
     borderColor: '#DDD',
-    borderRadius: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    width: '100%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
+    elevation: 2,
   },
-  transactionDetails: {
-    marginTop: 24,
+  detailsContainer: {
+    backgroundColor: '#FFF',
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
+    elevation: 2,
+    marginBottom: 24,
   },
   detailRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginVertical: 8,
-    alignItems: 'center',
+    marginBottom: 16,
   },
   detailLabel: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#777',
+    marginBottom: 6,
   },
-  detailValue: {
+  detailValueContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#F0F4F8',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+  },
+  detailValueText: {
     fontSize: 16,
-    fontWeight: '600',
+    color: '#333',
   },
-  clickableCategory: {
-    fontSize: 16,
+  activeRepeatingText: {
+    color: '#4CAF50',
     fontWeight: '600',
-    backgroundColor: '#E0E0E0',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-    textAlign: 'center',
-  },
-  activeRepeating: {
-    backgroundColor: '#4CAF50',
-    color: '#FFF',
   },
   notesInput: {
-    borderBottomWidth: 1,
-    borderColor: '#DDD',
-    paddingBottom: 8,
-    flex: 1,
+    backgroundColor: '#F0F4F8',
+    borderRadius: 8,
+    padding: 12,
     fontSize: 16,
+    color: '#333',
+    textAlignVertical: 'top',
+    height: 80,
   },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 32,
   },
-  button: {
-    flex: 1,
-    padding: 16,
-    marginHorizontal: 8,
+  cancelButton: {
+    backgroundColor: '#FF6347',
+    paddingVertical: 14,
+    paddingHorizontal: 32,
     borderRadius: 8,
+    flex: 1,
+    marginRight: 8,
     alignItems: 'center',
+  },
+  cancelButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '700',
   },
   saveButton: {
     backgroundColor: '#4CAF50',
+    paddingVertical: 14,
+    paddingHorizontal: 32,
+    borderRadius: 8,
+    flex: 1,
+    marginLeft: 8,
+    alignItems: 'center',
   },
-  cancelButton: {
-    backgroundColor: '#F44336',
-  },
-  buttonText: {
+  saveButtonText: {
     color: '#FFF',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '700',
   },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    padding: 16,
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
     backgroundColor: '#FFF',
-    alignItems: 'center',
+    padding: 24,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    maxHeight: '50%',
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '700',
+    marginBottom: 16,
+    textAlign: 'center',
+    color: '#333',
   },
-  repeatingItem: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderColor: '#DDD',
+  modalOption: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    marginBottom: 12,
+    backgroundColor: '#F0F4F8',
   },
-  repeatingLabel: {
+  selectedModalOption: {
+    backgroundColor: '#4CAF50',
+  },
+  modalOptionText: {
     fontSize: 16,
     color: '#333',
     textAlign: 'center',
   },
-  selectedRepeatingItem: {
-    backgroundColor: '#4CAF50',
+  selectedModalOptionText: {
     color: '#FFF',
-    borderRadius: 8,
+    fontWeight: '600',
   },
 });
 
