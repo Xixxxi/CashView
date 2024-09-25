@@ -1,4 +1,4 @@
-// screens/HomePage.tsx
+// HomePage.tsx
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -8,6 +8,8 @@ import {
   ScrollView,
   TouchableOpacity,
   Modal,
+  FlatList,
+  Alert,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
@@ -18,11 +20,10 @@ import {
 import { useTransactionContext, Transaction } from '../context/TransactionContext';
 import moment from 'moment';
 import { Ionicons } from '@expo/vector-icons';
-import { ComponentProps } from 'react';
 import { Category, categories as defaultCategories } from '../context/CategoryData';
-import TransactionDetailModal from '../components/TransactionDetailModal'; // Import the new modal component
+import TransactionDetailModal from '../components/TransactionDetailModal';
 
-type IoniconsName = ComponentProps<typeof Ionicons>['name'];
+type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
 
 const CATEGORY_STORAGE_KEY = '@categories';
 
@@ -32,21 +33,20 @@ const months = [
 ];
 
 const exchangeRates: { [key: string]: number } = {
-  'USD': 1.00,     // US Dollar
-  'EUR': 0.92,     // Euro
-  'GBP': 0.77,     // British Pound Sterling
-  'JPY': 156.93,   // Japanese Yen
-  'INR': 83.97,    // Indian Rupee
-  'RUB': 88.31,    // Russian Ruble
-  'MXN': 19.17,    // Mexican Peso
-  'CHF': 0.89,     // Swiss Franc
-  'CNY': 7.09,     // Chinese Yuan
-  'SEK': 10.18,    // Swedish Krona
-  'NZD': 1.49,     // New Zealand Dollar
-  'KRW': 1363.94,  // South Korean Won
-  'BRL': 5.04,     // Brazilian Real
-  'ZAR': 18.95,    // South African Rand
-  // Add more currencies as needed
+  'USD': 1.00,
+  'EUR': 0.92,
+  'GBP': 0.77,
+  'JPY': 156.93,
+  'INR': 83.97,
+  'RUB': 88.31,
+  'MXN': 19.17,
+  'CHF': 0.89,
+  'CNY': 7.09,
+  'SEK': 10.18,
+  'NZD': 1.49,
+  'KRW': 1363.94,
+  'BRL': 5.04,
+  'ZAR': 18.95,
 };
 
 const currencySymbols: { [key: string]: string } = {
@@ -64,7 +64,6 @@ const currencySymbols: { [key: string]: string } = {
   'KRW': '₩',
   'BRL': 'R$',
   'ZAR': 'R',
-  // Add more currencies as needed
 };
 
 const HomePage: React.FC = () => {
@@ -96,19 +95,17 @@ const HomePage: React.FC = () => {
         if (savedCategories) {
           setCategories(JSON.parse(savedCategories));
         } else {
-          // If no categories are saved, use default categories
           setCategories(defaultCategories);
         }
       } catch (error) {
         console.error('Failed to load categories from storage:', error);
-        // If there's an error, use default categories
         setCategories(defaultCategories);
       }
     };
     loadCategories();
   }, []);
 
-  // Use useFocusEffect to reload default currency when screen gains focus
+  // Reload default currency when screen gains focus
   useFocusEffect(
     React.useCallback(() => {
       const loadDefaultCurrency = async () => {
@@ -119,10 +116,10 @@ const HomePage: React.FC = () => {
             if (currencyCode) {
               setDefaultCurrencyCode(currencyCode);
             } else {
-              setDefaultCurrencyCode('USD'); // Default to USD if code not found
+              setDefaultCurrencyCode('USD');
             }
           } else {
-            setDefaultCurrencyCode('USD'); // Default to USD if not set
+            setDefaultCurrencyCode('USD');
           }
         } catch (error) {
           console.error('Failed to load default currency:', error);
@@ -141,13 +138,11 @@ const HomePage: React.FC = () => {
     const toRate = exchangeRates[toCurrency];
 
     if (fromRate === undefined || toRate === undefined) {
-      // If exchange rate is not defined, assume 1:1 conversion
       return amount;
     }
 
-    // Convert amount from the original currency to base currency (USD), then from base currency to target currency
-    const amountInBaseCurrency = amount / fromRate; // Convert to base currency (USD)
-    const convertedAmount = amountInBaseCurrency * toRate; // Convert to target currency
+    const amountInBaseCurrency = amount / fromRate;
+    const convertedAmount = amountInBaseCurrency * toRate;
     return convertedAmount;
   };
 
@@ -159,7 +154,6 @@ const HomePage: React.FC = () => {
     );
   });
 
-  // Calculate totals by converting amounts to the default currency
   const incomeTransactions = filteredTransactions.filter(
     (t: Transaction) => t.type === 'income'
   );
@@ -235,7 +229,18 @@ const HomePage: React.FC = () => {
   };
 
   const handleDeleteTransaction = (transaction: Transaction) => {
-    removeTransaction(transaction.id);
+    Alert.alert(
+      'Delete Transaction',
+      'Are you sure you want to delete this transaction?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => removeTransaction(transaction.id),
+        },
+      ]
+    );
   };
 
   // Function to get the category icon
@@ -248,19 +253,20 @@ const HomePage: React.FC = () => {
     <ScrollView contentContainerStyle={styles.container}>
       {/* Header Section */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => setIsModalVisible(true)}>
+        <TouchableOpacity onPress={() => setIsModalVisible(true)} style={styles.monthSelector}>
           <Text style={styles.monthText}>
             {months[selectedMonth]} {selectedYear}
           </Text>
+          <Ionicons name="chevron-down-outline" size={20} color="#555" />
         </TouchableOpacity>
         <TouchableOpacity onPress={() => setIsMenuVisible(true)}>
-          <Ionicons name="ellipsis-horizontal-outline" size={24} color="black" />
+          <Ionicons name="ellipsis-vertical-outline" size={24} color="#555" />
         </TouchableOpacity>
       </View>
 
       {/* Summary Section */}
-      <View style={styles.summary}>
-        <Text style={styles.sectionTitle}>Summary</Text>
+      <View style={styles.summaryCard}>
+        <Text style={styles.summaryTitle}>Summary</Text>
         <View style={styles.summaryContent}>
           <View style={styles.summaryItem}>
             <Text style={styles.summaryLabel}>Balance</Text>
@@ -317,31 +323,35 @@ const HomePage: React.FC = () => {
       </View>
 
       {/* Income Section */}
-      <View style={styles.incomeSection}>
-        <Text style={styles.sectionTitle}>Income</Text>
+      <View style={styles.transactionSection}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Income</Text>
+        </View>
         {incomeTransactions.map((transaction: Transaction) => (
           <TouchableOpacity
             key={transaction.id}
-            style={styles.transactionItem}
+            style={styles.transactionCard}
             onPress={() => openTransactionDetails(transaction)}
           >
-            <View style={[styles.iconCircle, { backgroundColor: '#AB47BC' }]}>
+            <View style={[styles.iconCircle, { backgroundColor: '#4CAF50' }]}>
               <Ionicons
                 name={getCategoryIcon(transaction.category)}
-                size={24}
+                size={20}
                 color="#FFF"
               />
             </View>
-            <Text style={styles.itemText}>{transaction.category}</Text>
-            <Text style={styles.itemText}>
-              {transaction.amount}{' '}
-              {transaction.currency || getCurrencySymbol(defaultCurrencyCode)}
-            </Text>
-            <TouchableOpacity
-              onPress={() => handleDeleteTransaction(transaction)}
-            >
-              <Ionicons name="trash-outline" size={24} color="#FF6347" />
-            </TouchableOpacity>
+            <View style={styles.transactionInfo}>
+              <Text style={styles.transactionCategory}>{transaction.category}</Text>
+              <Text style={styles.transactionDate}>{transaction.date}</Text>
+            </View>
+            <View style={styles.transactionAmountContainer}>
+              <Text style={styles.transactionAmount}>
+                +{transaction.amount} {transaction.currency || getCurrencySymbol(defaultCurrencyCode)}
+              </Text>
+              <TouchableOpacity onPress={() => handleDeleteTransaction(transaction)}>
+                <Ionicons name="trash-outline" size={20} color="#F44336" />
+              </TouchableOpacity>
+            </View>
           </TouchableOpacity>
         ))}
         {incomeTransactions.length === 0 && (
@@ -352,31 +362,35 @@ const HomePage: React.FC = () => {
       </View>
 
       {/* Expense Section */}
-      <View style={styles.expenseSection}>
-        <Text style={styles.sectionTitle}>Expenses</Text>
+      <View style={styles.transactionSection}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Expenses</Text>
+        </View>
         {expenseTransactions.map((transaction: Transaction) => (
           <TouchableOpacity
             key={transaction.id}
-            style={styles.transactionItem}
+            style={styles.transactionCard}
             onPress={() => openTransactionDetails(transaction)}
           >
-            <View style={[styles.iconCircle, { backgroundColor: '#FF7043' }]}>
+            <View style={[styles.iconCircle, { backgroundColor: '#F44336' }]}>
               <Ionicons
                 name={getCategoryIcon(transaction.category)}
-                size={24}
+                size={20}
                 color="#FFF"
               />
             </View>
-            <Text style={styles.itemText}>{transaction.category}</Text>
-            <Text style={styles.itemText}>
-              {transaction.amount}{' '}
-              {transaction.currency || getCurrencySymbol(defaultCurrencyCode)}
-            </Text>
-            <TouchableOpacity
-              onPress={() => handleDeleteTransaction(transaction)}
-            >
-              <Ionicons name="trash-outline" size={24} color="#FF6347" />
-            </TouchableOpacity>
+            <View style={styles.transactionInfo}>
+              <Text style={styles.transactionCategory}>{transaction.category}</Text>
+              <Text style={styles.transactionDate}>{transaction.date}</Text>
+            </View>
+            <View style={styles.transactionAmountContainer}>
+              <Text style={styles.transactionAmount}>
+                -{transaction.amount} {transaction.currency || getCurrencySymbol(defaultCurrencyCode)}
+              </Text>
+              <TouchableOpacity onPress={() => handleDeleteTransaction(transaction)}>
+                <Ionicons name="trash-outline" size={20} color="#F44336" />
+              </TouchableOpacity>
+            </View>
           </TouchableOpacity>
         ))}
         {expenseTransactions.length === 0 && (
@@ -391,7 +405,7 @@ const HomePage: React.FC = () => {
         style={styles.fab}
         onPress={() => navigation.navigate('AddTransaction')}
       >
-        <Ionicons name="add-outline" size={24} color="#FFF" />
+        <Ionicons name="add-outline" size={28} color="#FFF" />
       </TouchableOpacity>
 
       {/* Calendar Modal */}
@@ -400,11 +414,11 @@ const HomePage: React.FC = () => {
           <View style={styles.calendarWrapper}>
             <View style={styles.yearNavigation}>
               <TouchableOpacity onPress={() => handleYearChange('left')}>
-                <Ionicons name="arrow-back-outline" size={24} color="black" />
+                <Ionicons name="chevron-back-outline" size={24} color="#333" />
               </TouchableOpacity>
               <Text style={styles.yearText}>{selectedYear}</Text>
               <TouchableOpacity onPress={() => handleYearChange('right')}>
-                <Ionicons name="arrow-forward-outline" size={24} color="black" />
+                <Ionicons name="chevron-forward-outline" size={24} color="#333" />
               </TouchableOpacity>
             </View>
 
@@ -424,7 +438,7 @@ const HomePage: React.FC = () => {
                       selectedMonth === index && styles.selectedMonthText,
                     ]}
                   >
-                    {month}
+                    {month.slice(0, 3)}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -434,7 +448,7 @@ const HomePage: React.FC = () => {
               style={styles.closeButton}
               onPress={() => setIsModalVisible(false)}
             >
-              <Ionicons name="close" size={24} color="black" />
+              <Ionicons name="close-circle-outline" size={28} color="#333" />
             </TouchableOpacity>
           </View>
         </View>
@@ -456,9 +470,11 @@ const HomePage: React.FC = () => {
         >
           <View style={styles.menuContainer}>
             <TouchableOpacity style={styles.menuItem} onPress={openSettings}>
+              <Ionicons name="settings-outline" size={20} color="#333" />
               <Text style={styles.menuText}>Settings</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.menuItem} onPress={toggleProgressBar}>
+              <Ionicons name="bar-chart-outline" size={20} color="#333" />
               <Text style={styles.menuText}>Toggle Progress</Text>
             </TouchableOpacity>
           </View>
@@ -469,82 +485,133 @@ const HomePage: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  // ... [Styles remain unchanged]
   container: {
     flexGrow: 1,
     paddingHorizontal: 16,
     paddingTop: 48,
-    backgroundColor: '#FFF',
+    backgroundColor: '#F5F5F5',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  monthSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   monthText: {
     fontSize: 18,
     fontWeight: '600',
+    color: '#333',
   },
-  summary: {
+  summaryCard: {
+    backgroundColor: '#FFF',
+    borderRadius: 12,
+    padding: 16,
     marginTop: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  summaryTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#333',
+    marginBottom: 12,
   },
   summaryContent: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingTop: 8,
+    justifyContent: 'space-around',
+    marginBottom: 12,
   },
   summaryItem: {
-    flexDirection: 'column',
     alignItems: 'center',
   },
   summaryLabel: {
     fontSize: 14,
-    color: '#666',
+    color: '#777',
+    marginBottom: 4,
   },
   summaryValue: {
     fontSize: 16,
     fontWeight: '700',
+    color: '#333',
   },
   progressBarContainer: {
-    height: 16,
+    height: 10,
     flexDirection: 'row',
-    borderRadius: 8,
+    borderRadius: 5,
     overflow: 'hidden',
-    marginTop: 8,
+    marginBottom: 8,
   },
   progressBarSection: {
     height: '100%',
   },
   savingText: {
     textAlign: 'center',
-    marginTop: 8,
     fontSize: 14,
+    color: '#555',
+    marginTop: 4,
+  },
+  transactionSection: {
+    marginTop: 24,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
     color: '#333',
   },
-  incomeSection: {
-    marginTop: 24,
-  },
-  expenseSection: {
-    marginTop: 24,
-  },
-  transactionItem: {
+  transactionCard: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    backgroundColor: '#FFF',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
   },
   iconCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  itemText: {
-    fontSize: 16,
-    color: '#333',
+  transactionInfo: {
     flex: 1,
-    paddingLeft: 8,
+    marginLeft: 12,
+  },
+  transactionCategory: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+  },
+  transactionDate: {
+    fontSize: 12,
+    color: '#777',
+    marginTop: 4,
+  },
+  transactionAmountContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  transactionAmount: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#333',
+    marginRight: 8,
   },
   placeholderText: {
     fontSize: 16,
@@ -556,33 +623,41 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 24,
     right: 24,
-    backgroundColor: '#F06292',
+    backgroundColor: '#4CAF50',
     width: 56,
     height: 56,
     borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
   },
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    padding: 16,
   },
   calendarWrapper: {
     backgroundColor: '#FFF',
-    borderRadius: 8,
-    margin: 20,
-    padding: 10,
+    borderRadius: 12,
+    padding: 20,
+    alignItems: 'center',
   },
   yearNavigation: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 20,
+    width: '100%',
   },
   yearText: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: '700',
+    color: '#333',
   },
   monthGrid: {
     flexDirection: 'row',
@@ -591,7 +666,7 @@ const styles = StyleSheet.create({
   },
   monthItem: {
     width: '30%',
-    padding: 16,
+    paddingVertical: 10,
     margin: 5,
     justifyContent: 'center',
     alignItems: 'center',
@@ -610,36 +685,31 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   closeButton: {
-    alignItems: 'center',
-    marginTop: 10,
+    marginTop: 16,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    marginBottom: 8,
-  },
-  // Styles related to the Transaction Detail Modal have been moved to the new component
   menuOverlay: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
   },
   menuContainer: {
     backgroundColor: '#FFF',
-    padding: 20,
-    borderRadius: 8,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 12,
     width: '60%',
-    alignItems: 'center',
+    elevation: 5,
   },
   menuItem: {
-    paddingVertical: 10,
-    width: '100%',
+    flexDirection: 'row',
     alignItems: 'center',
+    paddingVertical: 12,
   },
   menuText: {
     fontSize: 16,
     color: '#333',
+    marginLeft: 12,
   },
 });
 
