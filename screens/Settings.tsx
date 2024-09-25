@@ -1,4 +1,5 @@
 // screens/Settings.tsx
+
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -10,6 +11,7 @@ import {
   Modal,
   TextInput,
   FlatList,
+  ScrollView,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -76,6 +78,11 @@ const Settings: React.FC = () => {
       return;
     }
 
+    if (newPassword.length < 6) {
+      Alert.alert('Error', 'Password must be at least 6 characters long.');
+      return;
+    }
+
     try {
       await AsyncStorage.setItem(PASSWORD_STORAGE_KEY, newPassword);
       setIsPasswordSet(true);
@@ -92,16 +99,31 @@ const Settings: React.FC = () => {
   };
 
   const handleDeleteUserData = async () => {
-    try {
-      await AsyncStorage.removeItem('@transactions');
-      await AsyncStorage.removeItem(PASSWORD_STORAGE_KEY);
-      setTransactions([]);
-      setIsPasswordSet(false);
-      Alert.alert('Success', 'All user data has been deleted.');
-    } catch (error) {
-      Alert.alert('Error', 'Failed to delete user data.');
-      console.error('Failed to delete user data', error);
-    }
+    Alert.alert(
+      'Delete User Data',
+      'Are you sure you want to delete all your data? This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await AsyncStorage.removeItem('@transactions');
+              await AsyncStorage.removeItem(PASSWORD_STORAGE_KEY);
+              await AsyncStorage.removeItem('@default_currency');
+              setTransactions([]);
+              setIsPasswordSet(false);
+              setSelectedCurrency('€');
+              Alert.alert('Success', 'All user data has been deleted.');
+            } catch (error) {
+              Alert.alert('Error', 'Failed to delete user data.');
+              console.error('Failed to delete user data', error);
+            }
+          },
+        },
+      ]
+    );
   };
 
   const handleVerifyCurrentPassword = async () => {
@@ -148,32 +170,60 @@ const Settings: React.FC = () => {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back-outline" size={24} color="black" />
+          <Ionicons name="arrow-back-outline" size={24} color="#333" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Settings</Text>
+        <View style={{ width: 24 }} />
       </View>
 
-      {/* Centered Settings Content */}
-      <View style={styles.content}>
-        <Text style={styles.sectionTitle}>Account Settings</Text>
+      {/* Content */}
+      <ScrollView contentContainerStyle={styles.content}>
+        {/* Account Settings */}
+        <View style={styles.sectionCard}>
+          <Text style={styles.sectionTitle}>Account Settings</Text>
 
-        <TouchableOpacity style={styles.option} onPress={openPasswordModal}>
-          <Text style={styles.optionText}>
-            {isPasswordSet ? 'Change Password' : 'Add Password'}
-          </Text>
-        </TouchableOpacity>
+          <TouchableOpacity style={styles.optionRow} onPress={openPasswordModal}>
+            <View style={styles.optionLeft}>
+              <Ionicons name="lock-closed-outline" size={24} color="#4CAF50" />
+              <Text style={styles.optionText}>
+                {isPasswordSet ? 'Change Password' : 'Add Password'}
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward-outline" size={20} color="#777" />
+          </TouchableOpacity>
+        </View>
 
-        <Text style={styles.sectionTitle}>App Settings</Text>
+        {/* App Settings */}
+        <View style={styles.sectionCard}>
+          <Text style={styles.sectionTitle}>App Settings</Text>
 
-        <TouchableOpacity style={styles.option} onPress={openCurrencyModal}>
-          <Text style={styles.optionText}>Select Default Currency</Text>
-          <Text style={styles.currencySymbol}>{selectedCurrency}</Text>
-        </TouchableOpacity>
+          <TouchableOpacity style={styles.optionRow} onPress={openCurrencyModal}>
+            <View style={styles.optionLeft}>
+              <Ionicons name="wallet-outline" size={24} color="#4CAF50" />
+              <Text style={styles.optionText}>Default Currency</Text>
+            </View>
+            <View style={styles.optionRight}>
+              <Text style={styles.currencyText}>{selectedCurrency}</Text>
+              <Ionicons name="chevron-forward-outline" size={20} color="#777" />
+            </View>
+          </TouchableOpacity>
 
-        <TouchableOpacity style={styles.option} onPress={handleDeleteUserData}>
-          <Text style={styles.optionText}>Delete User Data</Text>
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity style={styles.optionRow} onPress={handleDeleteUserData}>
+            <View style={styles.optionLeft}>
+              <Ionicons name="trash-outline" size={24} color="#F44336" />
+              <Text style={[styles.optionText, { color: '#F44336' }]}>
+                Delete User Data
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward-outline" size={20} color="#777" />
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+
+      {/* Back Button at the Bottom */}
+      <TouchableOpacity style={styles.bottomBackButton} onPress={() => navigation.goBack()}>
+        <Ionicons name="arrow-back-circle-outline" size={56} color="#4CAF50" />
+      </TouchableOpacity>
 
       {/* Password Modal */}
       <Modal
@@ -195,18 +245,18 @@ const Settings: React.FC = () => {
                   onChangeText={setCurrentPasswordInput}
                   autoFocus={true}
                 />
-                <View style={styles.buttonContainer}>
+                <View style={styles.modalButtonRow}>
                   <TouchableOpacity
-                    style={[styles.button, styles.saveButton]}
+                    style={[styles.modalButton, styles.verifyButton]}
                     onPress={handleVerifyCurrentPassword}
                   >
-                    <Text style={styles.buttonText}>Verify</Text>
+                    <Text style={styles.modalButtonText}>Verify</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.button, styles.cancelButton]}
+                    style={[styles.modalButton, styles.cancelButton]}
                     onPress={() => setPasswordModalVisible(false)}
                   >
-                    <Text style={styles.buttonText}>Cancel</Text>
+                    <Text style={styles.modalButtonText}>Cancel</Text>
                   </TouchableOpacity>
                 </View>
               </>
@@ -231,18 +281,18 @@ const Settings: React.FC = () => {
                   onChangeText={setConfirmPassword}
                 />
 
-                <View style={styles.buttonContainer}>
+                <View style={styles.modalButtonRow}>
                   <TouchableOpacity
-                    style={[styles.button, styles.saveButton]}
+                    style={[styles.modalButton, styles.saveButton]}
                     onPress={handleSavePassword}
                   >
-                    <Text style={styles.buttonText}>Save Password</Text>
+                    <Text style={styles.modalButtonText}>Save Password</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.button, styles.cancelButton]}
+                    style={[styles.modalButton, styles.cancelButton]}
                     onPress={() => setPasswordModalVisible(false)}
                   >
-                    <Text style={styles.buttonText}>Cancel</Text>
+                    <Text style={styles.modalButtonText}>Cancel</Text>
                   </TouchableOpacity>
                 </View>
               </>
@@ -260,7 +310,12 @@ const Settings: React.FC = () => {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.currencyModalContainer}>
-            <Text style={styles.modalTitle}>Select Default Currency</Text>
+            <View style={styles.currencyModalHeader}>
+              <Text style={styles.modalTitle}>Select Default Currency</Text>
+              <TouchableOpacity onPress={() => setCurrencyModalVisible(false)}>
+                <Ionicons name="close-outline" size={24} color="#333" />
+              </TouchableOpacity>
+            </View>
             <FlatList
               data={currencies}
               keyExtractor={(item) => item.code}
@@ -269,95 +324,96 @@ const Settings: React.FC = () => {
                   style={styles.currencyOption}
                   onPress={() => handleCurrencySelect(item.symbol)}
                 >
-                  <Text style={styles.currencyOptionText}>
-                    {item.symbol} - {item.name}
-                  </Text>
+                  <View style={styles.currencyOptionLeft}>
+                    <Ionicons name="wallet-outline" size={24} color="#4CAF50" />
+                    <Text style={styles.currencyOptionText}>
+                      {item.symbol} - {item.name}
+                    </Text>
+                  </View>
+                  {selectedCurrency === item.symbol && (
+                    <Ionicons name="checkmark-circle" size={24} color="#4CAF50" />
+                  )}
                 </TouchableOpacity>
               )}
             />
-            <TouchableOpacity
-              style={[styles.button, styles.cancelButton]}
-              onPress={() => setCurrencyModalVisible(false)}
-            >
-              <Text style={styles.buttonText}>Cancel</Text>
-            </TouchableOpacity>
           </View>
         </View>
       </Modal>
-
-      {/* Back Button */}
-      <View style={styles.footer}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Text style={styles.backButtonText}>Back</Text>
-        </TouchableOpacity>
-      </View>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  // Container styles
   container: {
     flex: 1,
-    backgroundColor: '#FFF',
+    backgroundColor: '#F5F5F5',
   },
   // Header styles
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
+    justifyContent: 'space-between',
+    backgroundColor: '#FFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginLeft: 16,
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#333',
   },
   // Content styles
   content: {
-    flex: 1,
-    justifyContent: 'center', // Center vertically
-    alignItems: 'center', // Center horizontally
-    paddingHorizontal: 20,
+    padding: 16,
+  },
+  sectionCard: {
+    backgroundColor: '#FFF',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
+    elevation: 2,
   },
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    marginBottom: 20,
-    textAlign: 'center', // Center the text
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#333',
+    marginBottom: 16,
   },
-  option: {
-    width: '80%', // Ensure responsiveness
-    paddingVertical: 15,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    backgroundColor: '#f0f0f0',
-    marginBottom: 15,
-    alignItems: 'center', // Center the option text
+  optionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderColor: '#EEE',
+  },
+  optionLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  optionRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   optionText: {
     fontSize: 16,
-    color: '#333',
-  },
-  // Footer styles
-  footer: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-  },
-  backButton: {
-    backgroundColor: '#4CAF50',
-    paddingVertical: 10,
-    paddingHorizontal: 40,
-    borderRadius: 8,
-  },
-  backButtonText: {
-    fontSize: 16,
-    color: '#FFF',
     fontWeight: '600',
+    color: '#333',
+    marginLeft: 12,
+  },
+  currencyText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginRight: 8,
   },
   // Modal styles
   modalOverlay: {
@@ -365,17 +421,19 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 16,
   },
   modalContainer: {
-    width: '80%',
+    width: '90%',
     backgroundColor: '#FFF',
-    borderRadius: 8,
+    borderRadius: 12,
     padding: 20,
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 20,
+    fontWeight: '700',
+    color: '#333',
+    marginBottom: 16,
     textAlign: 'center',
   },
   input: {
@@ -385,18 +443,21 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 16,
     fontSize: 16,
+    color: '#333',
   },
-  // Button styles
-  buttonContainer: {
+  modalButtonRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
-  button: {
+  modalButton: {
     flex: 1,
-    padding: 12,
-    marginHorizontal: 4,
+    paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',
+    marginHorizontal: 4,
+  },
+  verifyButton: {
+    backgroundColor: '#4CAF50',
   },
   saveButton: {
     backgroundColor: '#4CAF50',
@@ -404,32 +465,51 @@ const styles = StyleSheet.create({
   cancelButton: {
     backgroundColor: '#F44336',
   },
-  buttonText: {
+  modalButtonText: {
     color: '#FFF',
     fontSize: 16,
     fontWeight: '600',
   },
-  currencySymbol: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginTop: 8,
-    color: '#333',
-  },
+  // Currency Modal styles
   currencyModalContainer: {
-    width: '80%',
-    backgroundColor: '#FFF',
-    borderRadius: 8,
-    padding: 20,
+    width: '90%',
     maxHeight: '80%',
+    backgroundColor: '#FFF',
+    borderRadius: 12,
+    padding: 16,
+  },
+  currencyModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
   },
   currencyOption: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderColor: '#DDD',
+    borderColor: '#EEE',
+  },
+  currencyOptionLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   currencyOptionText: {
-    fontSize: 18,
+    fontSize: 16,
+    fontWeight: '600',
     color: '#333',
+    marginLeft: 12,
+  },
+  // Bottom Back Button styles
+  bottomBackButton: {
+    position: 'absolute',
+    bottom: 24,
+    right: 24,
+    // Alternatively, you can center it horizontally by adjusting 'left'
+    // left: '50%',
+    // transform: [{ translateX: -28 }], // Half of the button width to center
   },
 });
 
