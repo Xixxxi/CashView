@@ -119,147 +119,149 @@ const AddTransactionPage: React.FC = () => {
         style={styles.keyboardContainer}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={handleCancel} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color="#333" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>New Transaction</Text>
-          <View style={{ width: 24 }} />
-        </View>
-
-        {/* Transaction Type Selection */}
-        <View style={styles.transactionTypeContainer}>
-          {/* Income Button */}
-          <TouchableOpacity
-            style={[
-              styles.typeButton,
-              transactionType === 'income' && styles.activeIncomeButton,
-            ]}
-            onPress={() => setTransactionType('income')}
-          >
-            <Ionicons
-              name="cash-outline"
-              size={20}
-              color={transactionType === 'income' ? '#FFF' : '#4CAF50'}
-            />
-            <Text
-              style={[
-                styles.typeButtonText,
-                transactionType === 'income' && styles.activeTypeButtonText,
-              ]}
-            >
-              INCOME
-            </Text>
-          </TouchableOpacity>
-
-          {/* Expenses Button */}
-          <TouchableOpacity
-            style={[
-              styles.typeButton,
-              transactionType === 'expense' && styles.activeExpenseButton,
-            ]}
-            onPress={() => setTransactionType('expense')}
-          >
-            <Ionicons
-              name="cart-outline"
-              size={20}
-              color={transactionType === 'expense' ? '#FFF' : '#FF6347'}
-            />
-            <Text
-              style={[
-                styles.typeButtonText,
-                transactionType === 'expense' && styles.activeTypeButtonText,
-              ]}
-            >
-              EXPENSE
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Amount Input */}
-        <View style={styles.amountContainer}>
-          <TextInput
-            style={styles.amountInput}
-            keyboardType="decimal-pad"
-            placeholder={`0.00 ${defaultCurrency}`}
-            placeholderTextColor="#AAA"
-            value={amount}
-            onChangeText={setAmount}
-          />
-        </View>
-
-        {/* Transaction Details */}
-        <View style={styles.detailsContainer}>
-          {/* Category */}
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Category</Text>
-            <TouchableOpacity
-              style={styles.detailValueContainer}
-              onPress={() => setModalVisible(true)}
-            >
-              <Text style={styles.detailValueText}>{category}</Text>
-              <Ionicons name="chevron-forward" size={20} color="#666" />
+        <View style={styles.contentWrapper}>
+          {/* Header */}
+          <View style={styles.header}>
+            <TouchableOpacity onPress={handleCancel} style={styles.backButton}>
+              <Ionicons name="arrow-back" size={24} color="#333" />
             </TouchableOpacity>
+            <Text style={styles.headerTitle}>New Transaction</Text>
+            <View style={{ width: 24 }} /> 
           </View>
 
-          {/* Date */}
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Date</Text>
-            <TouchableOpacity style={styles.detailValueContainer} onPress={showDatePicker}>
-              <Text style={styles.detailValueText}>{date}</Text>
-              <Ionicons name="chevron-forward" size={20} color="#666" />
-            </TouchableOpacity>
-          </View>
-
-          {/* Account */}
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Account</Text>
-            <Text style={styles.detailValueText}>{account}</Text>
-          </View>
-
-          {/* Repeating */}
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Repeating</Text>
+          {/* Transaction Type Selection */}
+          <View style={styles.transactionTypeContainer}>
+            {/* Income Button */}
             <TouchableOpacity
-              style={styles.detailValueContainer}
-              onPress={() => setRepeatingModalVisible(true)}
+              style={[
+                styles.typeButton,
+                transactionType === 'income' && styles.activeIncomeButton,
+              ]}
+              onPress={() => setTransactionType('income')}
             >
+              <Ionicons
+                name="cash-outline"
+                size={20}
+                color={transactionType === 'income' ? '#FFF' : '#4CAF50'}
+              />
               <Text
                 style={[
-                  styles.detailValueText,
-                  repeating !== 'No' && styles.activeRepeatingText,
+                  styles.typeButtonText,
+                  transactionType === 'income' && styles.activeTypeButtonText,
                 ]}
               >
-                {repeating}
+                INCOME
               </Text>
-              <Ionicons name="chevron-forward" size={20} color="#666" />
+            </TouchableOpacity>
+
+            {/* Expenses Button */}
+            <TouchableOpacity
+              style={[
+                styles.typeButton,
+                transactionType === 'expense' && styles.activeExpenseButton,
+              ]}
+              onPress={() => setTransactionType('expense')}
+            >
+              <Ionicons
+                name="cart-outline"
+                size={20}
+                color={transactionType === 'expense' ? '#FFF' : '#FF6347'}
+              />
+              <Text
+                style={[
+                  styles.typeButtonText,
+                  transactionType === 'expense' && styles.activeTypeButtonText,
+                ]}
+              >
+                EXPENSE
+              </Text>
             </TouchableOpacity>
           </View>
 
-          {/* Notes */}
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Notes</Text>
+          {/* Amount Input */}
+          <View style={styles.amountContainer}>
             <TextInput
-              style={styles.notesInput}
-              placeholder="Add notes..."
+              style={styles.amountInput}
+              keyboardType="decimal-pad"
+              placeholder={`0.00 ${defaultCurrency}`}
               placeholderTextColor="#AAA"
-              value={notes}
-              onChangeText={setNotes}
-              multiline
-              numberOfLines={4}
+              value={amount}
+              onChangeText={setAmount}
             />
           </View>
-        </View>
 
-        {/* Save and Cancel Buttons */}
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
-            <Text style={styles.cancelButtonText}>Cancel</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-            <Text style={styles.saveButtonText}>Save</Text>
-          </TouchableOpacity>
+          {/* Transaction Details */}
+          <View style={styles.detailsContainer}>
+            {/* Category */}
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Category</Text>
+              <TouchableOpacity
+                style={styles.detailValueContainer}
+                onPress={() => setModalVisible(true)}
+              >
+                <Text style={styles.detailValueText}>{category}</Text>
+                <Ionicons name="chevron-forward" size={20} color="#666" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Date */}
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Date</Text>
+              <TouchableOpacity style={styles.detailValueContainer} onPress={showDatePicker}>
+                <Text style={styles.detailValueText}>{date}</Text>
+                <Ionicons name="chevron-forward" size={20} color="#666" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Account */}
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Account</Text>
+              <Text style={styles.detailValueText}>{account}</Text>
+            </View>
+
+            {/* Repeating */}
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Repeating</Text>
+              <TouchableOpacity
+                style={styles.detailValueContainer}
+                onPress={() => setRepeatingModalVisible(true)}
+              >
+                <Text
+                  style={[
+                    styles.detailValueText,
+                    repeating !== 'No' && styles.activeRepeatingText,
+                  ]}
+                >
+                  {repeating}
+                </Text>
+                <Ionicons name="chevron-forward" size={20} color="#666" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Notes */}
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Notes</Text>
+              <TextInput
+                style={styles.notesInput}
+                placeholder="Add notes..."
+                placeholderTextColor="#AAA"
+                value={notes}
+                onChangeText={setNotes}
+                multiline
+                numberOfLines={4}
+              />
+            </View>
+          </View>
+
+          {/* Save and Cancel Buttons */}
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+              <Text style={styles.saveButtonText}>Save</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </KeyboardAvoidingView>
 
@@ -322,7 +324,7 @@ const AddTransactionPage: React.FC = () => {
   );
 };
 
-const { width: windowWidth } = Dimensions.get('window');
+const { width: screenWidth } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
   container: {
@@ -331,14 +333,19 @@ const styles = StyleSheet.create({
   },
   keyboardContainer: {
     flex: 1,
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingTop: 40,
+    paddingBottom: 40,
+  },
+  contentWrapper: {
+    flex: 1,
     justifyContent: 'space-between',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 16, // Adjusted for better spacing
+    marginBottom: 20,
   },
   backButton: {
     padding: 8,
@@ -351,18 +358,18 @@ const styles = StyleSheet.create({
   transactionTypeContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginBottom: 16, // Adjusted for better spacing
+    marginBottom: 20,
   },
   typeButton: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFF',
-    paddingVertical: 12, // Maintained for readability
-    paddingHorizontal: 24, // Maintained for touch targets
+    paddingVertical: 12,
+    paddingHorizontal: 24,
     borderRadius: 25,
     borderWidth: 1,
     borderColor: '#DDD',
-    marginHorizontal: 8, // Maintained for spacing between buttons
+    marginHorizontal: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
@@ -378,8 +385,8 @@ const styles = StyleSheet.create({
     borderColor: '#4CAF50',
   },
   typeButtonText: {
-    marginLeft: 12, // Maintained for spacing between icon and text
-    fontSize: 16, // Maintained for readability
+    marginLeft: 12,
+    fontSize: 16,
     color: '#4CAF50',
     fontWeight: '600',
   },
@@ -388,15 +395,15 @@ const styles = StyleSheet.create({
   },
   amountContainer: {
     alignItems: 'center',
-    marginBottom: 16, // Adjusted for better spacing
+    marginBottom: 20,
   },
   amountInput: {
     width: '80%',
     backgroundColor: '#FFF',
     borderRadius: 12,
-    paddingVertical: 16, // Maintained for touch targets
-    paddingHorizontal: 24, // Maintained for readability
-    fontSize: 28, // Slightly reduced from 32 for better fit
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    fontSize: 28,
     fontWeight: '700',
     color: '#333',
     textAlign: 'center',
@@ -411,19 +418,19 @@ const styles = StyleSheet.create({
   detailsContainer: {
     backgroundColor: '#FFF',
     borderRadius: 12,
-    padding: 16, // Adjusted for better spacing
+    padding: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,
     shadowRadius: 2,
     elevation: 2,
-    marginBottom: 16, // Adjusted for better spacing
+    marginBottom: 20,
   },
   detailRow: {
-    marginBottom: 12, // Adjusted for better spacing
+    marginBottom: 12,
   },
   detailLabel: {
-    fontSize: 14, // Slightly reduced for consistency
+    fontSize: 14,
     color: '#777',
     marginBottom: 6,
   },
@@ -432,8 +439,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     backgroundColor: '#F0F4F8',
-    paddingVertical: 12, // Maintained for touch targets
-    paddingHorizontal: 16, // Maintained for readability
+    paddingVertical: 12,
+    paddingHorizontal: 16,
     borderRadius: 8,
   },
   detailValueText: {
@@ -447,11 +454,11 @@ const styles = StyleSheet.create({
   notesInput: {
     backgroundColor: '#F0F4F8',
     borderRadius: 8,
-    padding: 12, // Maintained for readability
+    padding: 12,
     fontSize: 16,
     color: '#333',
     textAlignVertical: 'top',
-    height: 80, // Maintained for usability
+    height: 80,
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -459,11 +466,11 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     backgroundColor: '#FF6347',
-    paddingVertical: 14, // Maintained for touch targets
-    paddingHorizontal: 32, // Maintained for readability
+    paddingVertical: 14,
+    paddingHorizontal: 32,
     borderRadius: 8,
     flex: 1,
-    marginRight: 8, // Maintained for spacing between buttons
+    marginRight: 8,
     alignItems: 'center',
   },
   cancelButtonText: {
@@ -473,11 +480,11 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     backgroundColor: '#4CAF50',
-    paddingVertical: 14, // Maintained for touch targets
-    paddingHorizontal: 32, // Maintained for readability
+    paddingVertical: 14,
+    paddingHorizontal: 32,
     borderRadius: 8,
     flex: 1,
-    marginLeft: 8, // Maintained for spacing between buttons
+    marginLeft: 8,
     alignItems: 'center',
   },
   saveButtonText: {
@@ -504,7 +511,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   modalOption: {
-    paddingVertical: 12, // Maintained for touch targets
+    paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 8,
     marginBottom: 12,
