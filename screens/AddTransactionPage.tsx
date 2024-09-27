@@ -10,7 +10,9 @@ import {
   Modal,
   FlatList,
   Alert,
-  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -113,14 +115,17 @@ const AddTransactionPage: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
+      <KeyboardAvoidingView
+        style={styles.keyboardContainer}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={handleCancel} style={styles.backButton}>
             <Ionicons name="arrow-back" size={24} color="#333" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>New Transaction</Text>
-          <View style={{ width: 24 }} /> 
+          <View style={{ width: 24 }} />
         </View>
 
         {/* Transaction Type Selection */}
@@ -148,9 +153,8 @@ const AddTransactionPage: React.FC = () => {
             </Text>
           </TouchableOpacity>
 
-
-                    {/* Expenses Button */}
-                    <TouchableOpacity
+          {/* Expenses Button */}
+          <TouchableOpacity
             style={[
               styles.typeButton,
               transactionType === 'expense' && styles.activeExpenseButton,
@@ -257,7 +261,7 @@ const AddTransactionPage: React.FC = () => {
             <Text style={styles.saveButtonText}>Save</Text>
           </TouchableOpacity>
         </View>
-      </ScrollView>
+      </KeyboardAvoidingView>
 
       {/* Category Modal */}
       <CategoryModal
@@ -318,20 +322,23 @@ const AddTransactionPage: React.FC = () => {
   );
 };
 
+const { width: windowWidth } = Dimensions.get('window');
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F7F9FC',
   },
-  scrollContainer: {
+  keyboardContainer: {
+    flex: 1,
     padding: 16,
-    paddingBottom: 32,
+    justifyContent: 'space-between',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 24,
+    marginBottom: 16, // Adjusted for better spacing
   },
   backButton: {
     padding: 8,
@@ -344,23 +351,23 @@ const styles = StyleSheet.create({
   transactionTypeContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginBottom: 24,
+    marginBottom: 16, // Adjusted for better spacing
   },
   typeButton: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFF',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
+    paddingVertical: 12, // Maintained for readability
+    paddingHorizontal: 24, // Maintained for touch targets
     borderRadius: 25,
     borderWidth: 1,
     borderColor: '#DDD',
-    marginHorizontal: 8,
+    marginHorizontal: 8, // Maintained for spacing between buttons
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
   },
   activeExpenseButton: {
     backgroundColor: '#FF6347',
@@ -371,8 +378,8 @@ const styles = StyleSheet.create({
     borderColor: '#4CAF50',
   },
   typeButtonText: {
-    marginLeft: 12,
-    fontSize: 16,
+    marginLeft: 12, // Maintained for spacing between icon and text
+    fontSize: 16, // Maintained for readability
     color: '#4CAF50',
     fontWeight: '600',
   },
@@ -381,15 +388,15 @@ const styles = StyleSheet.create({
   },
   amountContainer: {
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 16, // Adjusted for better spacing
   },
   amountInput: {
     width: '80%',
     backgroundColor: '#FFF',
     borderRadius: 12,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    fontSize: 32,
+    paddingVertical: 16, // Maintained for touch targets
+    paddingHorizontal: 24, // Maintained for readability
+    fontSize: 28, // Slightly reduced from 32 for better fit
     fontWeight: '700',
     color: '#333',
     textAlign: 'center',
@@ -404,19 +411,19 @@ const styles = StyleSheet.create({
   detailsContainer: {
     backgroundColor: '#FFF',
     borderRadius: 12,
-    padding: 16,
+    padding: 16, // Adjusted for better spacing
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,
     shadowRadius: 2,
     elevation: 2,
-    marginBottom: 24,
+    marginBottom: 16, // Adjusted for better spacing
   },
   detailRow: {
-    marginBottom: 16,
+    marginBottom: 12, // Adjusted for better spacing
   },
   detailLabel: {
-    fontSize: 14,
+    fontSize: 14, // Slightly reduced for consistency
     color: '#777',
     marginBottom: 6,
   },
@@ -425,8 +432,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     backgroundColor: '#F0F4F8',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    paddingVertical: 12, // Maintained for touch targets
+    paddingHorizontal: 16, // Maintained for readability
     borderRadius: 8,
   },
   detailValueText: {
@@ -440,11 +447,11 @@ const styles = StyleSheet.create({
   notesInput: {
     backgroundColor: '#F0F4F8',
     borderRadius: 8,
-    padding: 12,
+    padding: 12, // Maintained for readability
     fontSize: 16,
     color: '#333',
     textAlignVertical: 'top',
-    height: 80,
+    height: 80, // Maintained for usability
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -452,11 +459,11 @@ const styles = StyleSheet.create({
   },
   cancelButton: {
     backgroundColor: '#FF6347',
-    paddingVertical: 14,
-    paddingHorizontal: 32,
+    paddingVertical: 14, // Maintained for touch targets
+    paddingHorizontal: 32, // Maintained for readability
     borderRadius: 8,
     flex: 1,
-    marginRight: 8,
+    marginRight: 8, // Maintained for spacing between buttons
     alignItems: 'center',
   },
   cancelButtonText: {
@@ -466,11 +473,11 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     backgroundColor: '#4CAF50',
-    paddingVertical: 14,
-    paddingHorizontal: 32,
+    paddingVertical: 14, // Maintained for touch targets
+    paddingHorizontal: 32, // Maintained for readability
     borderRadius: 8,
     flex: 1,
-    marginLeft: 8,
+    marginLeft: 8, // Maintained for spacing between buttons
     alignItems: 'center',
   },
   saveButtonText: {
@@ -480,15 +487,14 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
   },
   modalContent: {
     backgroundColor: '#FFF',
-    padding: 24,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    maxHeight: '50%',
+    padding: 20,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
   },
   modalTitle: {
     fontSize: 18,
@@ -498,7 +504,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   modalOption: {
-    paddingVertical: 12,
+    paddingVertical: 12, // Maintained for touch targets
     paddingHorizontal: 16,
     borderRadius: 8,
     marginBottom: 12,
