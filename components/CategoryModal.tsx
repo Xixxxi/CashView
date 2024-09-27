@@ -281,12 +281,16 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
 
       {/* Modal for Creating New Category */}
       <Modal
-        animationType="slide"
+        animationType="fade"
         transparent={true}
         visible={createCategoryModalVisible}
         onRequestClose={() => setCreateCategoryModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPressOut={() => setCreateCategoryModalVisible(false)}
+        >
           <View style={styles.createModalContainer}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Create New Category</Text>
@@ -338,17 +342,21 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
               </TouchableOpacity>
             </View>
           </View>
-        </View>
+        </TouchableOpacity>
       </Modal>
 
       {/* Modal for Editing Category */}
       <Modal
-        animationType="slide"
+        animationType="fade"
         transparent={true}
         visible={editCategoryModalVisible}
         onRequestClose={() => setEditCategoryModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPressOut={() => setEditCategoryModalVisible(false)}
+        >
           <View style={styles.createModalContainer}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Edit Category</Text>
@@ -400,7 +408,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
               </TouchableOpacity>
             </View>
           </View>
-        </View>
+        </TouchableOpacity>
       </Modal>
     </>
   );
@@ -442,7 +450,7 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   flatListContent: {
-    paddingHorizontal: 16,
+    paddingHorizontal: itemMargin,
   },
   categoryItem: {
     alignItems: 'center',
@@ -454,7 +462,7 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: '#4CAF50', // Accent Green
+    backgroundColor: '#4CAF50', // Neutral Green Accent
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
@@ -479,7 +487,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
     margin: 16,
     backgroundColor: '#F0F0F0',
     borderRadius: 8,
@@ -493,7 +502,7 @@ const styles = StyleSheet.create({
   // Create/Edit Category Modal Styles
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 16,
