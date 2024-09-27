@@ -248,7 +248,7 @@ const AddTransactionPage: React.FC = () => {
                 value={notes}
                 onChangeText={setNotes}
                 multiline
-                numberOfLines={4}
+                numberOfLines={2}
               />
             </View>
           </View>
@@ -284,7 +284,7 @@ const AddTransactionPage: React.FC = () => {
           activeOpacity={1}
           onPressOut={() => setRepeatingModalVisible(false)}
         >
-          <View style={styles.modalContent}>
+          <View style={styles.repeatingModalContent}>
             <Text style={styles.modalTitle}>Set Repeating</Text>
             <FlatList
               data={['No', 'Monthly', 'Quarterly', 'Annually']}
@@ -333,19 +333,19 @@ const styles = StyleSheet.create({
   },
   keyboardContainer: {
     flex: 1,
-    paddingHorizontal: 16,
-    paddingTop: 40,
-    paddingBottom: 40,
   },
   contentWrapper: {
     flex: 1,
     justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: 20,
+    paddingBottom: 10,
   },
+  // Header styles
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 20,
   },
   backButton: {
     padding: 8,
@@ -355,21 +355,24 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#333',
   },
+  // Transaction Type Selection
   transactionTypeContainer: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    marginBottom: 20,
+    justifyContent: 'space-between',
+    marginTop: 12,
   },
   typeButton: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFF',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
     borderRadius: 25,
     borderWidth: 1,
     borderColor: '#DDD',
-    marginHorizontal: 8,
+    flex: 1,
+    marginHorizontal: 4,
+    justifyContent: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
@@ -385,7 +388,7 @@ const styles = StyleSheet.create({
     borderColor: '#4CAF50',
   },
   typeButtonText: {
-    marginLeft: 12,
+    marginLeft: 8,
     fontSize: 16,
     color: '#4CAF50',
     fontWeight: '600',
@@ -393,16 +396,17 @@ const styles = StyleSheet.create({
   activeTypeButtonText: {
     color: '#FFF',
   },
+  // Amount Input
   amountContainer: {
     alignItems: 'center',
-    marginBottom: 20,
+    marginTop: 12,
   },
   amountInput: {
-    width: '80%',
+    width: '90%',
     backgroundColor: '#FFF',
     borderRadius: 12,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
     fontSize: 28,
     fontWeight: '700',
     color: '#333',
@@ -415,16 +419,17 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 2,
   },
+  // Transaction Details
   detailsContainer: {
     backgroundColor: '#FFF',
     borderRadius: 12,
     padding: 16,
+    marginTop: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,
     shadowRadius: 2,
     elevation: 2,
-    marginBottom: 20,
   },
   detailRow: {
     marginBottom: 12,
@@ -439,7 +444,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     backgroundColor: '#F0F4F8',
-    paddingVertical: 12,
+    paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 8,
   },
@@ -458,16 +463,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
     textAlignVertical: 'top',
-    height: 80,
+    height: 60,
   },
+  // Buttons
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    marginTop: 16,
   },
   cancelButton: {
     backgroundColor: '#FF6347',
     paddingVertical: 14,
-    paddingHorizontal: 32,
+    paddingHorizontal: 24,
     borderRadius: 8,
     flex: 1,
     marginRight: 8,
@@ -481,7 +488,7 @@ const styles = StyleSheet.create({
   saveButton: {
     backgroundColor: '#4CAF50',
     paddingVertical: 14,
-    paddingHorizontal: 32,
+    paddingHorizontal: 24,
     borderRadius: 8,
     flex: 1,
     marginLeft: 8,
@@ -492,25 +499,28 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
   },
+  // Repeating Modal
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  modalContent: {
+  repeatingModalContent: {
+    width: '80%',
     backgroundColor: '#FFF',
+    borderRadius: 12,
     padding: 20,
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
+    alignItems: 'center',
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: '700',
     marginBottom: 16,
-    textAlign: 'center',
     color: '#333',
   },
   modalOption: {
+    width: '100%',
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 8,
