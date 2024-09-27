@@ -76,7 +76,7 @@ const HomePage: React.FC = () => {
   const [isMenuVisible, setIsMenuVisible] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [showProgressBar, setShowProgressBar] = useState(true);
-  const [defaultCurrencyCode, setDefaultCurrencyCode] = useState<string>('USD');
+  const [defaultCurrencyCode, setDefaultCurrencyCode] = useState<string>('EUR');
   const [categories, setCategories] = useState<Category[]>([]);
 
   const getCurrencyCodeFromSymbol = (symbol: string): string | undefined => {
@@ -87,27 +87,26 @@ const HomePage: React.FC = () => {
     return currencySymbols[code] || code;
   };
 
-  // Load categories from AsyncStorage
-  useEffect(() => {
-    const loadCategories = async () => {
-      try {
-        const savedCategories = await AsyncStorage.getItem(CATEGORY_STORAGE_KEY);
-        if (savedCategories) {
-          setCategories(JSON.parse(savedCategories));
-        } else {
-          setCategories(defaultCategories);
-        }
-      } catch (error) {
-        console.error('Failed to load categories from storage:', error);
+  // Function to load categories from AsyncStorage
+  const loadCategories = async () => {
+    try {
+      const savedCategories = await AsyncStorage.getItem(CATEGORY_STORAGE_KEY);
+      if (savedCategories) {
+        setCategories(JSON.parse(savedCategories));
+      } else {
         setCategories(defaultCategories);
       }
-    };
-    loadCategories();
-  }, []);
+    } catch (error) {
+      console.error('Failed to load categories from storage:', error);
+      setCategories(defaultCategories);
+    }
+  };
 
-  // Reload default currency when screen gains focus
+  // Reload categories every time the screen gains focus
   useFocusEffect(
     React.useCallback(() => {
+      loadCategories();
+      // Also load default currency
       const loadDefaultCurrency = async () => {
         try {
           const currencySymbol = await AsyncStorage.getItem('@default_currency');
@@ -116,10 +115,10 @@ const HomePage: React.FC = () => {
             if (currencyCode) {
               setDefaultCurrencyCode(currencyCode);
             } else {
-              setDefaultCurrencyCode('USD');
+              setDefaultCurrencyCode('EUR');
             }
           } else {
-            setDefaultCurrencyCode('USD');
+            setDefaultCurrencyCode('EUR');
           }
         } catch (error) {
           console.error('Failed to load default currency:', error);
