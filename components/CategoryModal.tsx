@@ -15,13 +15,11 @@ import {
   ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Category, categories as defaultCategories } from '../context/CategoryData';
 
 type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
-
-const CATEGORY_STORAGE_KEY = '@categories';
 
 interface CategoryModalProps {
   visible: boolean;
@@ -29,43 +27,19 @@ interface CategoryModalProps {
   onSelectCategory: (categoryLabel: string) => void;
 }
 
-const iconOptions: IoniconsName[] = [
-  'home-outline',
-  'car-outline',
-  'fast-food-outline',
-  'cart-outline',
-  'cash-outline',
-  'heart-outline',
-  'airplane-outline',
-  'barbell-outline',
-  'restaurant-outline',
-  'gift-outline',
-  'bus-outline',
-  'trending-up-outline',
-  'wallet-outline',
-  'tv-outline',
-  'cafe-outline',
-  'wifi-outline',
-  'bicycle-outline',
-  'school-outline',
-  'camera-outline',
-  'laptop-outline',
-  'medkit-outline',
-  'hammer-outline',
-  'shirt-outline',
-  'book-outline',
-  'fitness-outline',
-  'umbrella-outline',
-  'phone-portrait-outline',
-  'headset-outline',
-  'musical-notes-outline',
-  'game-controller-outline',
-  'bed-outline',
-  'leaf-outline',
-  'paw-outline',
-];
+const CATEGORY_STORAGE_KEY = '@categories';
 
-const CategoryModal: React.FC<CategoryModalProps> = ({ visible, onClose, onSelectCategory }) => {
+// Calculate item width based on screen width and desired number of columns
+const screenWidth = Dimensions.get('window').width;
+const numColumns = 4;
+const itemMargin = 12;
+const itemSize = (screenWidth - (numColumns + 1) * itemMargin) / numColumns;
+
+const CategoryModal: React.FC<CategoryModalProps> = ({
+  visible,
+  onClose,
+  onSelectCategory,
+}) => {
   const [localCategories, setLocalCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -75,7 +49,42 @@ const CategoryModal: React.FC<CategoryModalProps> = ({ visible, onClose, onSelec
   const [newCategoryTitle, setNewCategoryTitle] = useState('');
   const [selectedIcon, setSelectedIcon] = useState<IoniconsName>('home-outline');
 
-  const windowWidth = Dimensions.get('window').width;
+  // Icon options for category creation/editing
+  const iconOptions: IoniconsName[] = [
+    'home-outline',
+    'car-outline',
+    'fast-food-outline',
+    'cart-outline',
+    'cash-outline',
+    'heart-outline',
+    'airplane-outline',
+    'barbell-outline',
+    'restaurant-outline',
+    'gift-outline',
+    'bus-outline',
+    'trending-up-outline',
+    'wallet-outline',
+    'tv-outline',
+    'cafe-outline',
+    'wifi-outline',
+    'bicycle-outline',
+    'school-outline',
+    'camera-outline',
+    'laptop-outline',
+    'medkit-outline',
+    'hammer-outline',
+    'shirt-outline',
+    'book-outline',
+    'fitness-outline',
+    'umbrella-outline',
+    'phone-portrait-outline',
+    'headset-outline',
+    'musical-notes-outline',
+    'game-controller-outline',
+    'bed-outline',
+    'leaf-outline',
+    'paw-outline',
+  ];
 
   // Load categories from AsyncStorage when the modal becomes visible
   useEffect(() => {
@@ -110,15 +119,18 @@ const CategoryModal: React.FC<CategoryModalProps> = ({ visible, onClose, onSelec
     }
   };
 
+  // Handle category selection
   const handleCategorySelect = (categoryLabel: string) => {
     onSelectCategory(categoryLabel);
     onClose();
   };
 
+  // Filtered categories based on search query
   const filteredCategories = localCategories.filter((item) =>
     item.label.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // Handle creating a new category
   const handleCreateCategory = () => {
     if (newCategoryTitle.trim() !== '') {
       const existingCategory = localCategories.find(
@@ -145,13 +157,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({ visible, onClose, onSelec
     }
   };
 
-  const handleLongPressCategory = (category: Category) => {
-    setSelectedCategory(category);
-    setNewCategoryTitle(category.label);
-    setSelectedIcon(category.icon);
-    setEditCategoryModalVisible(true);
-  };
-
+  // Handle editing an existing category
   const handleEditCategory = () => {
     if (selectedCategory && newCategoryTitle.trim() !== '') {
       const existingCategory = localCategories.find(
@@ -180,6 +186,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({ visible, onClose, onSelec
     }
   };
 
+  // Handle deleting a category
   const handleDeleteCategory = () => {
     if (selectedCategory) {
       Alert.alert(
@@ -217,7 +224,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({ visible, onClose, onSelec
 
   return (
     <>
-      {/* Modal for Category Selection */}
+      {/* Main Category Modal */}
       <Modal
         animationType="slide"
         transparent={false}
@@ -227,7 +234,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({ visible, onClose, onSelec
         <View style={styles.modalHeader}>
           <Text style={styles.modalTitle}>Categories</Text>
           <TouchableOpacity onPress={onClose}>
-            <Ionicons name="close-outline" size={24} color="#333" />
+            <Ionicons name="close-outline" size={28} color="#555" />
           </TouchableOpacity>
         </View>
         <TextInput
@@ -239,13 +246,18 @@ const CategoryModal: React.FC<CategoryModalProps> = ({ visible, onClose, onSelec
         />
         <FlatList
           data={filteredCategories}
-          numColumns={3}
+          numColumns={numColumns}
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
             <TouchableOpacity
               style={styles.categoryItem}
               onPress={() => handleCategorySelect(item.label)}
-              onLongPress={() => handleLongPressCategory(item)}
+              onLongPress={() => {
+                setSelectedCategory(item);
+                setNewCategoryTitle(item.label);
+                setSelectedIcon(item.icon);
+                setEditCategoryModalVisible(true);
+              }}
             >
               <View style={styles.iconCircle}>
                 <Ionicons name={item.icon as IoniconsName} size={24} color="#FFF" />
@@ -256,12 +268,13 @@ const CategoryModal: React.FC<CategoryModalProps> = ({ visible, onClose, onSelec
           ListEmptyComponent={
             <Text style={styles.emptyText}>No categories found.</Text>
           }
+          contentContainerStyle={styles.flatListContent}
         />
         <TouchableOpacity
           style={styles.newCategoryButton}
           onPress={() => setCreateCategoryModalVisible(true)}
         >
-          <Ionicons name="add-circle-outline" size={24} color="#4CAF50" />
+          <Ionicons name="add-circle-outline" size={28} color="#4CAF50" />
           <Text style={styles.newCategoryText}>Add New Category</Text>
         </TouchableOpacity>
       </Modal>
@@ -278,7 +291,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({ visible, onClose, onSelec
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Create New Category</Text>
               <TouchableOpacity onPress={() => setCreateCategoryModalVisible(false)}>
-                <Ionicons name="close-outline" size={24} color="#333" />
+                <Ionicons name="close-outline" size={28} color="#555" />
               </TouchableOpacity>
             </View>
             <TextInput
@@ -291,7 +304,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({ visible, onClose, onSelec
             <Text style={styles.selectIconText}>Select an Icon</Text>
             <FlatList
               data={iconOptions}
-              numColumns={5}
+              numColumns={numColumns}
               keyExtractor={(item) => item}
               renderItem={({ item }) => (
                 <TouchableOpacity
@@ -301,9 +314,14 @@ const CategoryModal: React.FC<CategoryModalProps> = ({ visible, onClose, onSelec
                   ]}
                   onPress={() => setSelectedIcon(item)}
                 >
-                  <Ionicons name={item} size={24} color={selectedIcon === item ? '#FFF' : '#4CAF50'} />
+                  <Ionicons
+                    name={item}
+                    size={24}
+                    color={selectedIcon === item ? '#FFF' : '#4CAF50'}
+                  />
                 </TouchableOpacity>
               )}
+              contentContainerStyle={styles.iconList}
             />
             <View style={styles.modalButtonRow}>
               <TouchableOpacity
@@ -335,7 +353,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({ visible, onClose, onSelec
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Edit Category</Text>
               <TouchableOpacity onPress={() => setEditCategoryModalVisible(false)}>
-                <Ionicons name="close-outline" size={24} color="#333" />
+                <Ionicons name="close-outline" size={28} color="#555" />
               </TouchableOpacity>
             </View>
             <TextInput
@@ -348,7 +366,7 @@ const CategoryModal: React.FC<CategoryModalProps> = ({ visible, onClose, onSelec
             <Text style={styles.selectIconText}>Select an Icon</Text>
             <FlatList
               data={iconOptions}
-              numColumns={5}
+              numColumns={numColumns}
               keyExtractor={(item) => item}
               renderItem={({ item }) => (
                 <TouchableOpacity
@@ -358,9 +376,14 @@ const CategoryModal: React.FC<CategoryModalProps> = ({ visible, onClose, onSelec
                   ]}
                   onPress={() => setSelectedIcon(item)}
                 >
-                  <Ionicons name={item} size={24} color={selectedIcon === item ? '#FFF' : '#4CAF50'} />
+                  <Ionicons
+                    name={item}
+                    size={24}
+                    color={selectedIcon === item ? '#FFF' : '#4CAF50'}
+                  />
                 </TouchableOpacity>
               )}
+              contentContainerStyle={styles.iconList}
             />
             <View style={styles.modalButtonRow}>
               <TouchableOpacity
@@ -384,7 +407,13 @@ const CategoryModal: React.FC<CategoryModalProps> = ({ visible, onClose, onSelec
 };
 
 const styles = StyleSheet.create({
-  // General Modal Styles
+  // Loading Indicator Styles
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  // Main Modal Styles
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -392,7 +421,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   modalTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '700',
     color: '#333',
   },
@@ -406,21 +435,34 @@ const styles = StyleSheet.create({
     color: '#333',
     borderWidth: 1,
     borderColor: '#DDD',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  flatListContent: {
+    paddingHorizontal: 16,
   },
   categoryItem: {
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 16,
-    width: '33%',
+    margin: itemMargin / 2,
+    width: itemSize,
   },
   iconCircle: {
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#4CAF50', // Accent Green
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   categoryLabel: {
     fontSize: 14,
@@ -448,14 +490,6 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     fontWeight: '600',
   },
-
-  // Loading Indicator Styles
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
   // Create/Edit Category Modal Styles
   modalOverlay: {
     flex: 1,
@@ -469,6 +503,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF',
     borderRadius: 12,
     padding: 20,
+    maxHeight: '80%',
   },
   input: {
     borderWidth: 1,
@@ -491,31 +526,15 @@ const styles = StyleSheet.create({
     padding: 12,
     margin: 6,
     borderRadius: 8,
-    backgroundColor: '#F0F0F0',
-    width: (Dimensions.get('window').width - 64) / 5, // 5 columns with margins
-    height: 60,
+    backgroundColor: '#E8F5E9', // Light Green Background
+    width: itemSize - 24, // Adjusted for padding and margins
+    height: itemSize - 24,
   },
   selectedIconItem: {
     backgroundColor: '#4CAF50',
   },
-  currencyOption: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderColor: '#EEE',
-  },
-  currencyOptionLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  currencyOptionText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginLeft: 12,
+  iconList: {
+    justifyContent: 'center',
   },
   modalButtonRow: {
     flexDirection: 'row',
