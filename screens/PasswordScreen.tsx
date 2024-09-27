@@ -1,4 +1,5 @@
 // screens/PasswordScreen.tsx
+
 import React, { useState } from 'react';
 import {
   View,
@@ -9,7 +10,10 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  SafeAreaView,
+  ScrollView,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const PASSWORD_STORAGE_KEY = '@app_password';
@@ -27,11 +31,12 @@ const PasswordScreen: React.FC<PasswordScreenProps> = ({ onAuthentication }) => 
       if (storedPassword === password) {
         onAuthentication();
       } else {
-        Alert.alert('Error', 'Incorrect password.');
+        Alert.alert('Authentication Failed', 'Incorrect password. Please try again.');
+        setPassword('');
       }
     } catch (error) {
-      console.error('Failed to authenticate:', error);
-      Alert.alert('Error', 'Failed to authenticate.');
+      console.error('Authentication Error:', error);
+      Alert.alert('Error', 'An error occurred during authentication. Please try again.');
     }
   };
 
@@ -48,10 +53,10 @@ const PasswordScreen: React.FC<PasswordScreenProps> = ({ onAuthentication }) => 
             try {
               await AsyncStorage.removeItem(PASSWORD_STORAGE_KEY);
               onAuthentication();
-              Alert.alert('Notice', 'Your password has been removed.');
+              Alert.alert('Notice', 'Your password has been removed. Access granted.');
             } catch (error) {
-              console.error('Failed to remove password:', error);
-              Alert.alert('Error', 'Failed to remove password.');
+              console.error('Emergency Unlock Error:', error);
+              Alert.alert('Error', 'Failed to perform emergency unlock.');
             }
           },
         },
@@ -60,79 +65,118 @@ const PasswordScreen: React.FC<PasswordScreenProps> = ({ onAuthentication }) => 
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <Text style={styles.title}>Enter Password</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        placeholderTextColor="#AAA"
-        secureTextEntry={true}
-        value={password}
-        onChangeText={setPassword}
-        onSubmitEditing={handleAuthenticate}
-        autoFocus={true}
-      />
-      <TouchableOpacity style={styles.button} onPress={handleAuthenticate}>
-        <Text style={styles.buttonText}>Unlock</Text>
-      </TouchableOpacity>
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView
+        style={styles.keyboardContainer}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContainer}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* Icon */}
+          <View style={styles.iconContainer}>
+            <Ionicons name="lock-closed-outline" size={80} color="#4CAF50" />
+          </View>
 
-      {/* Emergency Unlock Button */}
-      <TouchableOpacity style={styles.emergencyButton} onPress={handleEmergencyUnlock}>
-        <Text style={styles.emergencyButtonText}>Emergency Unlock</Text>
-      </TouchableOpacity>
-    </KeyboardAvoidingView>
+          {/* Title */}
+          <Text style={styles.title}>Enter Your Password</Text>
+
+          {/* Password Input */}
+          <TextInput
+            style={styles.input}
+            placeholder="Password"
+            placeholderTextColor="#AAA"
+            secureTextEntry={true}
+            value={password}
+            onChangeText={setPassword}
+            returnKeyType="done"
+            onSubmitEditing={handleAuthenticate}
+            autoFocus={true}
+          />
+
+          {/* Authenticate Button */}
+          <TouchableOpacity style={styles.authenticateButton} onPress={handleAuthenticate}>
+            <Text style={styles.authenticateButtonText}>Unlock</Text>
+          </TouchableOpacity>
+
+          {/* Emergency Unlock */}
+          <TouchableOpacity style={styles.emergencyButton} onPress={handleEmergencyUnlock}>
+            <Text style={styles.emergencyButtonText}>Emergency Unlock</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  // Container styles
   container: {
     flex: 1,
-    backgroundColor: '#FFF',
+    backgroundColor: '#F5F5F5',
+  },
+  keyboardContainer: {
+    flex: 1,
+  },
+  scrollContainer: {
+    flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 16,
+    padding: 24,
   },
-  // Title styles
-  title: {
-    fontSize: 24,
-    fontWeight: '600',
+  iconContainer: {
     marginBottom: 24,
   },
-  // Input styles
+  title: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#333',
+    marginBottom: 24,
+    textAlign: 'center',
+  },
   input: {
-    width: '80%',
+    width: '100%',
+    backgroundColor: '#FFF',
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 24,
     borderWidth: 1,
     borderColor: '#DDD',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 16,
-    fontSize: 16,
-    color: '#333',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
+    elevation: 2,
   },
-  // Button styles
-  button: {
+  authenticateButton: {
+    width: '100%',
     backgroundColor: '#4CAF50',
-    paddingVertical: 12,
-    paddingHorizontal: 32,
-    borderRadius: 8,
-    marginBottom: 20,
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  buttonText: {
+  authenticateButtonText: {
     color: '#FFF',
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 18,
+    fontWeight: '700',
   },
-  // Emergency Button styles
   emergencyButton: {
-    marginTop: 10,
+    marginTop: 8,
   },
   emergencyButtonText: {
     color: '#F44336',
     fontSize: 16,
+    fontWeight: '600',
     textDecorationLine: 'underline',
   },
 });
