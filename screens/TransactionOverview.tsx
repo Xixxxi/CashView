@@ -23,8 +23,12 @@ import { Category, categories as defaultCategories } from '../context/CategoryDa
 import TransactionDetailModal from '../components/TransactionDetailModal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import moment from 'moment';
+import { Dimensions } from 'react-native';
 
 type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
+
+// Get the screen width to calculate dynamic sizes for responsiveness
+const screenWidth = Dimensions.get('window').width;
 
 // Months Array
 const months = [
@@ -50,10 +54,13 @@ const currencySymbols: { [key: string]: string } = {
   'ZAR': 'R',
 };
 
-// Function to get currency symbol from code
-const getCurrencySymbol = (code: string): string => {
-  return currencySymbols[code] || '$';
+// Ensure that the currency from each transaction is properly displayed
+const getCurrencySymbol = (code: string | undefined): string => {
+  // If no code is provided, return an empty string instead of defaulting to '$'
+  if (!code) return '';
+  return currencySymbols[code] || code;
 };
+
 
 const TransactionOverview: React.FC = () => {
   const { transactions, removeTransaction } = useTransactionContext();
@@ -167,10 +174,10 @@ const TransactionOverview: React.FC = () => {
 
   const renderTransactionItem = ({ item }: { item: Transaction }) => {
     const isIncome = item.type === 'income';
-    const currencySymbol = item.currency ? getCurrencySymbol(item.currency) : '$';
+    const currencySymbol = getCurrencySymbol(item.currency); // Use the saved currency from each transaction
     const amountColor = isIncome ? '#4CAF50' : '#F44336';
     const formattedDate = moment(item.date, 'DD MMMM YYYY').format('MMM DD, YYYY');
-
+  
     return (
       <TouchableOpacity
         style={styles.transactionCard}
@@ -191,6 +198,7 @@ const TransactionOverview: React.FC = () => {
       </TouchableOpacity>
     );
   };
+  
 
   // Handle Year Change
   const handleYearChange = (direction: 'left' | 'right') => {
@@ -295,6 +303,14 @@ const TransactionOverview: React.FC = () => {
           onClose={() => setSelectedTransaction(null)}
         />
 
+        {/* Floating Action Button */}
+        <TouchableOpacity
+          style={styles.fab}
+          onPress={() => setIsFilterModalVisible(true)}
+        >
+          <Ionicons name="funnel-outline" size={28} color="#FFF" />
+        </TouchableOpacity>
+
         {/* Filter Modal */}
         <Modal visible={isFilterModalVisible} transparent={true} animationType="slide">
           <TouchableOpacity
@@ -359,48 +375,6 @@ const TransactionOverview: React.FC = () => {
                   </TouchableOpacity>
                 </View>
 
-                {/* Category Filter */}
-                <Text style={styles.filterLabel}>Categories</Text>
-                {categories.map((category) => (
-                  <TouchableOpacity
-                    key={category.label}
-                    style={[
-                      styles.categoryOption,
-                      selectedCategories.includes(category.label) && styles.activeCategoryOption,
-                    ]}
-                    onPress={() => toggleCategorySelection(category.label)}
-                  >
-                    <Text
-                      style={[
-                        styles.categoryOptionText,
-                        selectedCategories.includes(category.label) && styles.activeCategoryOptionText,
-                      ]}
-                    >
-                      {category.label}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-
-                {/* Amount Range Filter */}
-                <Text style={styles.filterLabel}>Amount Range</Text>
-                <View style={styles.amountRangeContainer}>
-                  <TextInput
-                    style={styles.amountInput}
-                    placeholder="Min"
-                    value={amountRange.min}
-                    onChangeText={(value) => setAmountRange((prev) => ({ ...prev, min: value }))}
-                    keyboardType="numeric"
-                  />
-                  <Text style={styles.amountSeparator}>-</Text>
-                  <TextInput
-                    style={styles.amountInput}
-                    placeholder="Max"
-                    value={amountRange.max}
-                    onChangeText={(value) => setAmountRange((prev) => ({ ...prev, max: value }))}
-                    keyboardType="numeric"
-                  />
-                </View>
-
                 {/* Sort By Filter */}
                 <Text style={styles.filterLabel}>Sort By</Text>
                 <View style={styles.filterOptions}>
@@ -436,6 +410,51 @@ const TransactionOverview: React.FC = () => {
                       Amount
                     </Text>
                   </TouchableOpacity>
+                </View>
+
+                {/* Amount Range Filter */}
+                <Text style={styles.filterLabel}>Amount Range</Text>
+                <View style={styles.amountRangeContainer}>
+                  <TextInput
+                    style={styles.amountInput}
+                    placeholder="Min"
+                    value={amountRange.min}
+                    onChangeText={(value) => setAmountRange((prev) => ({ ...prev, min: value }))}
+                    keyboardType="numeric"
+                  />
+                  <Text style={styles.amountSeparator}>-</Text>
+                  <TextInput
+                    style={styles.amountInput}
+                    placeholder="Max"
+                    value={amountRange.max}
+                    onChangeText={(value) => setAmountRange((prev) => ({ ...prev, max: value }))}
+                    keyboardType="numeric"
+                  />
+                </View>
+
+                {/* Category Filter */}
+                <Text style={styles.filterLabel}>Categories</Text>
+                <View style={styles.categoryContainer}>
+                  {categories.map((category) => (
+                    <TouchableOpacity
+                      key={category.label}
+                      style={[
+                        styles.categoryItem,
+                        selectedCategories.includes(category.label) && styles.activeCategoryItem,
+                      ]}
+                      onPress={() => toggleCategorySelection(category.label)}
+                    >
+                      <Ionicons name={category.icon as IoniconsName} size={30} color={selectedCategories.includes(category.label) ? '#FFF' : '#333'} />
+                      <Text
+                        style={[
+                          styles.categoryItemText,
+                          selectedCategories.includes(category.label) && styles.activeCategoryItemText,
+                        ]}
+                      >
+                        {category.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
                 </View>
 
                 {/* Apply Button */}
@@ -724,22 +743,29 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontWeight: '700',
   },
-  categoryOption: {
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    marginBottom: 8,
+  categoryContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  categoryItem: {
+    width: (screenWidth / 5) - 20, // Ensuring 4 items fit in one row (account for padding/margins)
     backgroundColor: '#F0F4F8',
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    marginVertical: 4,
+    borderRadius: 8,
     alignItems: 'center',
   },
-  activeCategoryOption: {
+  activeCategoryItem: {
     backgroundColor: '#4CAF50',
   },
-  categoryOptionText: {
-    fontSize: 16,
+  categoryItemText: {
+    fontSize: 12,
     color: '#333',
+    marginTop: 6,
   },
-  activeCategoryOptionText: {
+  activeCategoryItemText: {
     color: '#FFF',
     fontWeight: '600',
   },
@@ -773,6 +799,22 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 16,
     fontWeight: '700',
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 16,
+    right: 16,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#4CAF50',
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
   },
   loadingContainer: {
     flex: 1,
