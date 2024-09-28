@@ -21,9 +21,8 @@ import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { useTransactionContext, Transaction } from '../context/TransactionContext';
 import { Category, categories as defaultCategories } from '../context/CategoryData';
 import TransactionDetailModal from '../components/TransactionDetailModal';
-import CategoryModal from '../components/CategoryModal';
-import moment from 'moment';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import moment from 'moment';
 
 type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
 
@@ -57,17 +56,19 @@ const getCurrencySymbol = (code: string): string => {
 };
 
 const TransactionOverview: React.FC = () => {
-  const { transactions, removeTransaction, updateTransaction } = useTransactionContext();
+  const { transactions, removeTransaction } = useTransactionContext();
   const navigation = useNavigation<NavigationProp<any>>();
 
   const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'income' | 'expense'>('all');
-  const [filterCategory, setFilterCategory] = useState<string>('All');
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [amountRange, setAmountRange] = useState({ min: '', max: '' });
+  const [sortOption, setSortOption] = useState<'date' | 'amount'>('date');
 
   // States for Month and Year Selection
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
@@ -95,7 +96,7 @@ const TransactionOverview: React.FC = () => {
     loadCategories();
   }, []);
 
-  // Filter transactions based on search, type, category, month, and year
+  // Filter transactions based on search, type, categories, amount range, and sort option
   useEffect(() => {
     let tempTransactions = [...transactions];
 
@@ -112,9 +113,9 @@ const TransactionOverview: React.FC = () => {
       tempTransactions = tempTransactions.filter((t) => t.type === filterType);
     }
 
-    // Filter by category
-    if (filterCategory !== 'All') {
-      tempTransactions = tempTransactions.filter((t) => t.category === filterCategory);
+    // Filter by selected categories
+    if (selectedCategories.length > 0) {
+      tempTransactions = tempTransactions.filter((t) => selectedCategories.includes(t.category));
     }
 
     // Filter by selected month and year
@@ -123,15 +124,26 @@ const TransactionOverview: React.FC = () => {
       return transactionDate.year() === selectedYear && transactionDate.month() === selectedMonth;
     });
 
-    // Sort transactions by date (earliest first)
-    tempTransactions.sort((a, b) => {
-      const dateA = moment(a.date, 'DD MMMM YYYY').toDate();
-      const dateB = moment(b.date, 'DD MMMM YYYY').toDate();
-      return dateA.getTime() - dateB.getTime();
-    });
+    // Filter by amount range
+    if (amountRange.min !== '' || amountRange.max !== '') {
+      const minAmount = parseFloat(amountRange.min) || 0;
+      const maxAmount = parseFloat(amountRange.max) || Number.MAX_SAFE_INTEGER;
+      tempTransactions = tempTransactions.filter((t) => {
+        const amount = parseFloat(t.amount);
+        return amount >= minAmount && amount <= maxAmount;
+      });
+    }
+
+    // Sort transactions
+    if (sortOption === 'amount') {
+      tempTransactions.sort((a, b) => parseFloat(a.amount) - parseFloat(b.amount));
+    } else {
+      tempTransactions.sort((a, b) => moment(a.date, 'DD MMMM YYYY').toDate().getTime() -
+        moment(b.date, 'DD MMMM YYYY').toDate().getTime());
+    }
 
     setFilteredTransactions(tempTransactions);
-  }, [transactions, searchQuery, filterType, filterCategory, selectedYear, selectedMonth]);
+  }, [transactions, searchQuery, filterType, selectedCategories, selectedYear, selectedMonth, amountRange, sortOption]);
 
   const handleDeleteTransaction = (transaction: Transaction) => {
     Alert.alert(
@@ -180,12 +192,6 @@ const TransactionOverview: React.FC = () => {
     );
   };
 
-  const handleFilterApply = (type: 'all' | 'income' | 'expense', category: string) => {
-    setFilterType(type);
-    setFilterCategory(category);
-    setIsFilterModalVisible(false);
-  };
-
   // Handle Year Change
   const handleYearChange = (direction: 'left' | 'right') => {
     if (direction === 'left') {
@@ -199,6 +205,18 @@ const TransactionOverview: React.FC = () => {
   const handleMonthSelect = (monthIndex: number) => {
     setSelectedMonth(monthIndex);
     setIsMonthModalVisible(false);
+  };
+
+  const toggleCategorySelection = (category: string) => {
+    if (selectedCategories.includes(category)) {
+      setSelectedCategories(selectedCategories.filter((cat) => cat !== category));
+    } else {
+      setSelectedCategories([...selectedCategories, category]);
+    }
+  };
+
+  const handleFilterApply = () => {
+    setIsFilterModalVisible(false);
   };
 
   if (isLoading) {
@@ -285,85 +303,149 @@ const TransactionOverview: React.FC = () => {
             onPressOut={() => setIsFilterModalVisible(false)}
           >
             <View style={styles.filterModalContainer}>
-              <Text style={styles.modalTitle}>Filter Transactions</Text>
+              <ScrollView contentContainerStyle={{ paddingVertical: 16 }}>
+                <Text style={styles.modalTitle}>Filter Transactions</Text>
 
-              {/* Transaction Type Filter */}
-              <Text style={styles.filterLabel}>Type</Text>
-              <View style={styles.filterOptions}>
-                <TouchableOpacity
-                  style={[
-                    styles.filterOption,
-                    filterType === 'all' && styles.activeFilterOption,
-                  ]}
-                  onPress={() => handleFilterApply('all', filterCategory)}
-                >
-                  <Text
+                {/* Transaction Type Filter */}
+                <Text style={styles.filterLabel}>Type</Text>
+                <View style={styles.filterOptions}>
+                  <TouchableOpacity
                     style={[
-                      styles.filterOptionText,
-                      filterType === 'all' && styles.activeFilterOptionText,
+                      styles.filterOption,
+                      filterType === 'all' && styles.activeFilterOption,
                     ]}
+                    onPress={() => setFilterType('all')}
                   >
-                    All
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.filterOption,
-                    filterType === 'income' && styles.activeFilterOption,
-                  ]}
-                  onPress={() => handleFilterApply('income', filterCategory)}
-                >
-                  <Text
+                    <Text
+                      style={[
+                        styles.filterOptionText,
+                        filterType === 'all' && styles.activeFilterOptionText,
+                      ]}
+                    >
+                      All
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
                     style={[
-                      styles.filterOptionText,
-                      filterType === 'income' && styles.activeFilterOptionText,
+                      styles.filterOption,
+                      filterType === 'income' && styles.activeFilterOption,
                     ]}
+                    onPress={() => setFilterType('income')}
                   >
-                    Income
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.filterOption,
-                    filterType === 'expense' && styles.activeFilterOption,
-                  ]}
-                  onPress={() => handleFilterApply('expense', filterCategory)}
-                >
-                  <Text
+                    <Text
+                      style={[
+                        styles.filterOptionText,
+                        filterType === 'income' && styles.activeFilterOptionText,
+                      ]}
+                    >
+                      Income
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
                     style={[
-                      styles.filterOptionText,
-                      filterType === 'expense' && styles.activeFilterOptionText,
+                      styles.filterOption,
+                      filterType === 'expense' && styles.activeFilterOption,
                     ]}
+                    onPress={() => setFilterType('expense')}
                   >
-                    Expense
-                  </Text>
-                </TouchableOpacity>
-              </View>
+                    <Text
+                      style={[
+                        styles.filterOptionText,
+                        filterType === 'expense' && styles.activeFilterOptionText,
+                      ]}
+                    >
+                      Expense
+                    </Text>
+                  </TouchableOpacity>
+                </View>
 
-              {/* Category Filter */}
-              <Text style={styles.filterLabel}>Category</Text>
-              <TouchableOpacity
-                style={styles.categoryFilter}
-                onPress={() => {
-                  setIsFilterModalVisible(false);
-                  // Implement CategoryModal or navigate to a CategorySelection screen
-                  Alert.alert(
-                    'Category Filter',
-                    'Category filtering is not implemented yet.'
-                  );
-                }}
-              >
-                <Text style={styles.categoryFilterText}>{filterCategory}</Text>
-                <Ionicons name="chevron-down-outline" size={20} color="#777" />
-              </TouchableOpacity>
+                {/* Category Filter */}
+                <Text style={styles.filterLabel}>Categories</Text>
+                {categories.map((category) => (
+                  <TouchableOpacity
+                    key={category.label}
+                    style={[
+                      styles.categoryOption,
+                      selectedCategories.includes(category.label) && styles.activeCategoryOption,
+                    ]}
+                    onPress={() => toggleCategorySelection(category.label)}
+                  >
+                    <Text
+                      style={[
+                        styles.categoryOptionText,
+                        selectedCategories.includes(category.label) && styles.activeCategoryOptionText,
+                      ]}
+                    >
+                      {category.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
 
-              {/* Apply Button */}
-              <TouchableOpacity
-                style={styles.applyButton}
-                onPress={() => setIsFilterModalVisible(false)}
-              >
-                <Text style={styles.applyButtonText}>Apply Filters</Text>
-              </TouchableOpacity>
+                {/* Amount Range Filter */}
+                <Text style={styles.filterLabel}>Amount Range</Text>
+                <View style={styles.amountRangeContainer}>
+                  <TextInput
+                    style={styles.amountInput}
+                    placeholder="Min"
+                    value={amountRange.min}
+                    onChangeText={(value) => setAmountRange((prev) => ({ ...prev, min: value }))}
+                    keyboardType="numeric"
+                  />
+                  <Text style={styles.amountSeparator}>-</Text>
+                  <TextInput
+                    style={styles.amountInput}
+                    placeholder="Max"
+                    value={amountRange.max}
+                    onChangeText={(value) => setAmountRange((prev) => ({ ...prev, max: value }))}
+                    keyboardType="numeric"
+                  />
+                </View>
+
+                {/* Sort By Filter */}
+                <Text style={styles.filterLabel}>Sort By</Text>
+                <View style={styles.filterOptions}>
+                  <TouchableOpacity
+                    style={[
+                      styles.filterOption,
+                      sortOption === 'date' && styles.activeFilterOption,
+                    ]}
+                    onPress={() => setSortOption('date')}
+                  >
+                    <Text
+                      style={[
+                        styles.filterOptionText,
+                        sortOption === 'date' && styles.activeFilterOptionText,
+                      ]}
+                    >
+                      Date
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.filterOption,
+                      sortOption === 'amount' && styles.activeFilterOption,
+                    ]}
+                    onPress={() => setSortOption('amount')}
+                  >
+                    <Text
+                      style={[
+                        styles.filterOptionText,
+                        sortOption === 'amount' && styles.activeFilterOptionText,
+                      ]}
+                    >
+                      Amount
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Apply Button */}
+                <TouchableOpacity
+                  style={styles.applyButton}
+                  onPress={handleFilterApply}
+                >
+                  <Text style={styles.applyButtonText}>Apply Filters</Text>
+                </TouchableOpacity>
+              </ScrollView>
             </View>
           </TouchableOpacity>
         </Modal>
@@ -642,17 +724,41 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontWeight: '700',
   },
-  categoryFilter: {
+  categoryOption: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    marginBottom: 8,
+    backgroundColor: '#F0F4F8',
+    alignItems: 'center',
+  },
+  activeCategoryOption: {
+    backgroundColor: '#4CAF50',
+  },
+  categoryOptionText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  activeCategoryOptionText: {
+    color: '#FFF',
+    fontWeight: '600',
+  },
+  amountRangeContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#F0F4F8',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
     marginBottom: 16,
   },
-  categoryFilterText: {
+  amountInput: {
+    flex: 1,
+    padding: 10,
+    fontSize: 16,
+    backgroundColor: '#F0F4F8',
+    borderRadius: 8,
+    textAlign: 'center',
+  },
+  amountSeparator: {
+    paddingHorizontal: 10,
     fontSize: 16,
     color: '#333',
   },
