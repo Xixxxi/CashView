@@ -1,4 +1,5 @@
 // App.tsx
+
 import React, { useState, useEffect } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
@@ -7,10 +8,11 @@ import { createStackNavigator } from '@react-navigation/stack';
 import HomePage from './screens/HomePage';
 import AddTransactionPage from './screens/AddTransactionPage';
 import Settings from './screens/Settings'; // Import the Settings screen
+import TransactionOverview from './screens/TransactionOverview'; // Import the new TransactionOverview screen
 import { TransactionProvider } from './context/TransactionContext'; // Import the context provider
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import PasswordScreen from './screens/PasswordScreen'; // We'll create this component
+import PasswordScreen from './screens/PasswordScreen'; // Import the PasswordScreen component
 
 const PASSWORD_STORAGE_KEY = '@app_password';
 
@@ -68,7 +70,13 @@ export default function App() {
             />
             <Stack.Screen
               name="Settings"
-              component={Settings} 
+              component={Settings}
+              options={{ headerShown: false }}
+            />
+            {/* Added TransactionOverview Screen */}
+            <Stack.Screen
+              name="TransactionOverview"
+              component={TransactionOverview}
               options={{ headerShown: false }}
             />
           </Stack.Navigator>

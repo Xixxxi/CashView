@@ -10,6 +10,7 @@ import {
   Modal,
   FlatList,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
@@ -220,6 +221,11 @@ const HomePage: React.FC = () => {
   const openSettings = () => {
     setIsMenuVisible(false);
     navigation.navigate('Settings');
+  };
+
+  const openTransactions = () => {
+    setIsMenuVisible(false);
+    navigation.navigate('TransactionOverview');
   };
 
   const toggleProgressBar = () => {
@@ -472,6 +478,13 @@ const HomePage: React.FC = () => {
               <Ionicons name="settings-outline" size={20} color="#333" />
               <Text style={styles.menuText}>Settings</Text>
             </TouchableOpacity>
+
+            {/* New "Transactions" Option */}
+            <TouchableOpacity style={styles.menuItem} onPress={openTransactions}>
+              <Ionicons name="list-outline" size={20} color="#333" />
+              <Text style={styles.menuText}>Transactions</Text>
+            </TouchableOpacity>
+
             <TouchableOpacity style={styles.menuItem} onPress={toggleProgressBar}>
               <Ionicons name="bar-chart-outline" size={20} color="#333" />
               <Text style={styles.menuText}>Toggle Progress</Text>
