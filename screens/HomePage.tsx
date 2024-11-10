@@ -22,11 +22,14 @@ import { useTransactionContext, Transaction } from '../context/TransactionContex
 import moment from 'moment';
 import { Ionicons } from '@expo/vector-icons';
 import { Category, categories as defaultCategories } from '../context/CategoryData';
+import { Account, defaultAccounts } from '../context/AccountData';
 import TransactionDetailModal from '../components/TransactionDetailModal';
+import AccountModal from '../components/AccountModal';
 
 type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
 
 const CATEGORY_STORAGE_KEY = '@categories';
+const ACCOUNT_STORAGE_KEY = '@accounts';
 
 const months = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -79,6 +82,9 @@ const HomePage: React.FC = () => {
   const [showProgressBar, setShowProgressBar] = useState(true);
   const [defaultCurrencyCode, setDefaultCurrencyCode] = useState<string>('EUR');
   const [categories, setCategories] = useState<Category[]>([]);
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [selectedAccount, setSelectedAccount] = useState<string>('Personal');
+  const [isAccountModalVisible, setIsAccountModalVisible] = useState(false);
 
   const getCurrencyCodeFromSymbol = (symbol: string): string | undefined => {
     return Object.keys(currencySymbols).find((key) => currencySymbols[key] === symbol);
@@ -103,10 +109,26 @@ const HomePage: React.FC = () => {
     }
   };
 
-  // Reload categories every time the screen gains focus
+  // Function to load accounts from AsyncStorage
+  const loadAccounts = async () => {
+    try {
+      const savedAccounts = await AsyncStorage.getItem(ACCOUNT_STORAGE_KEY);
+      if (savedAccounts) {
+        setAccounts(JSON.parse(savedAccounts));
+      } else {
+        setAccounts(defaultAccounts);
+      }
+    } catch (error) {
+      console.error('Failed to load accounts from storage:', error);
+      setAccounts(defaultAccounts);
+    }
+  };
+
+  // Reload categories and accounts every time the screen gains focus
   useFocusEffect(
     React.useCallback(() => {
       loadCategories();
+      loadAccounts();
       // Also load default currency
       const loadDefaultCurrency = async () => {
         try {
@@ -150,7 +172,8 @@ const HomePage: React.FC = () => {
     const transactionDate = moment(transaction.date, 'DD MMMM YYYY');
     return (
       transactionDate.year() === selectedYear &&
-      transactionDate.month() === selectedMonth
+      transactionDate.month() === selectedMonth &&
+      transaction.account === selectedAccount
     );
   });
 
@@ -254,6 +277,22 @@ const HomePage: React.FC = () => {
     return foundCategory ? (foundCategory.icon as IoniconsName) : 'help-outline';
   };
 
+  // Function to get the account icon
+  const getAccountIcon = (accountLabel: string): IoniconsName => {
+    const foundAccount = accounts.find((acc) => acc.label === accountLabel);
+    return foundAccount ? (foundAccount.icon as IoniconsName) : 'wallet-outline';
+  };
+
+  const openAccountModal = () => {
+    setIsMenuVisible(false);
+    setIsAccountModalVisible(true);
+  };
+
+  const handleAccountSelect = (accountLabel: string) => {
+    setSelectedAccount(accountLabel);
+    setIsAccountModalVisible(false);
+  };
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       {/* Header Section */}
@@ -271,7 +310,15 @@ const HomePage: React.FC = () => {
 
       {/* Summary Section */}
       <View style={styles.summaryCard}>
-        <Text style={styles.summaryTitle}>Summary</Text>
+        <View style={styles.summaryHeader}>
+          <Text style={styles.summaryTitle}>Summary</Text>
+          {/* Selected Account Display */}
+          <TouchableOpacity onPress={openAccountModal} style={styles.accountSelector}>
+            <Ionicons name={getAccountIcon(selectedAccount)} size={20} color="#4CAF50" />
+            <Text style={styles.accountText}>{selectedAccount}</Text>
+            <Ionicons name="chevron-down-outline" size={20} color="#555" />
+          </TouchableOpacity>
+        </View>
         <View style={styles.summaryContent}>
           <View style={styles.summaryItem}>
             <Text style={styles.summaryLabel}>Balance</Text>
@@ -485,6 +532,12 @@ const HomePage: React.FC = () => {
               <Text style={styles.menuText}>Transactions</Text>
             </TouchableOpacity>
 
+            {/* New "Accounts" Option */}
+            <TouchableOpacity style={styles.menuItem} onPress={openAccountModal}>
+              <Ionicons name="wallet-outline" size={20} color="#333" />
+              <Text style={styles.menuText}>Accounts</Text>
+            </TouchableOpacity>
+
             <TouchableOpacity style={styles.menuItem} onPress={toggleProgressBar}>
               <Ionicons name="bar-chart-outline" size={20} color="#333" />
               <Text style={styles.menuText}>Toggle Progress</Text>
@@ -492,6 +545,13 @@ const HomePage: React.FC = () => {
           </View>
         </TouchableOpacity>
       </Modal>
+
+      {/* Account Modal */}
+      <AccountModal
+        visible={isAccountModalVisible}
+        onClose={() => setIsAccountModalVisible(false)}
+        onSelectAccount={handleAccountSelect}
+      />
     </ScrollView>
   );
 };
@@ -528,16 +588,38 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+  summaryHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
   summaryTitle: {
     fontSize: 18,
     fontWeight: '700',
     color: '#333',
-    marginBottom: 12,
+  },
+  accountSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#DDD',
+  },
+  accountText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginLeft: 8,
+    marginRight: 4,
   },
   summaryContent: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     marginBottom: 12,
+    marginTop: 12,
   },
   summaryItem: {
     alignItems: 'center',

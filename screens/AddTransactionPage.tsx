@@ -1,4 +1,5 @@
 // screens/AddTransactionPage.tsx
+
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -20,6 +21,7 @@ import { useTransactionContext } from '../context/TransactionContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import CategoryModal from '../components/CategoryModal';
+import AccountModal from '../components/AccountModal'; // Import the AccountModal
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import moment from 'moment';
 
@@ -35,10 +37,11 @@ const AddTransactionPage: React.FC = () => {
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('Gehälter');
   const [date, setDate] = useState(getCurrentDate());
-  const [account, setAccount] = useState('Savings');
+  const [account, setAccount] = useState('Personal'); // Changed default account
   const [repeating, setRepeating] = useState<'No' | 'Monthly' | 'Quarterly' | 'Annually'>('No');
   const [notes, setNotes] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
+  const [accountModalVisible, setAccountModalVisible] = useState(false); // New state for AccountModal
   const [repeatingModalVisible, setRepeatingModalVisible] = useState(false);
 
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
@@ -216,7 +219,13 @@ const AddTransactionPage: React.FC = () => {
             {/* Account */}
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>Account</Text>
-              <Text style={styles.detailValueText}>{account}</Text>
+              <TouchableOpacity
+                style={styles.detailValueContainer}
+                onPress={() => setAccountModalVisible(true)}
+              >
+                <Text style={styles.detailValueText}>{account}</Text>
+                <Ionicons name="chevron-forward" size={20} color="#666" />
+              </TouchableOpacity>
             </View>
 
             {/* Repeating */}
@@ -270,6 +279,13 @@ const AddTransactionPage: React.FC = () => {
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
         onSelectCategory={(categoryLabel) => setCategory(categoryLabel)}
+      />
+
+      {/* Account Modal */}
+      <AccountModal
+        visible={accountModalVisible}
+        onClose={() => setAccountModalVisible(false)}
+        onSelectAccount={(accountLabel) => setAccount(accountLabel)}
       />
 
       {/* Repeating Modal */}
